@@ -1,0 +1,95 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Log files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Spring Boot
+application-local.properties
+```
+
+---
+
+## 完整的项目目录结构
+```
+genshin-gm-generator/
+├── build.gradle                   ← Gradle 构建文件
+├── settings.gradle                ← Gradle 设置文件
+├── gradlew                        ← Gradle Wrapper（Linux/Mac）
+├── gradlew.bat                    ← Gradle Wrapper（Windows）
+├── gradle/
+│   └── wrapper/
+│       ├── gradle-wrapper.jar
+│       └── gradle-wrapper.properties
+├── .gitignore                     ← Git 忽略文件
+├── .github/
+│   └── workflows/
+│       ├── build.yml              ← 构建工作流
+│       └── release.yml            ← 发布工作流
+├── data/
+│   ├── Item.txt
+│   ├── Weapon.txt
+│   ├── Avatar.txt
+│   └── Quest.txt
+└── src/
+    └── main/
+        ├── java/
+        │   └── com/
+        │       └── genshin/
+        │           └── gm/
+        │               ├── GenshinGMApplication.java
+        │               ├── controller/
+        │               │   └── GMController.java
+        │               ├── service/
+        │               │   └── GMService.java
+        │               ├── model/
+        │               │   └── GameData.java
+        │               └── util/
+        │                   └── DataLoader.java
+        └── resources/
+            ├── application.properties
+            └── static/
+                └── index.html

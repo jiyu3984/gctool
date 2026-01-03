@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>原神 GM 指令生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+
+        .menu {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .menu-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .menu-btn.active {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sub-menu {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .sub-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: white;
+            color: #667eea;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sub-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .sub-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .command-text {
+            background: #fff;
+            padding: 12px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            color: #333;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #45a049;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ 原神 GM 指令生成器</h1>
+
+        <!-- 主菜单 -->
+        <div class="menu">
+            <button class="menu-btn active" onclick="showSection('items')">物品生成</button>
+            <button class="menu-btn" onclick="showSection('quest')">任务</button>
+        </div>
+
+        <!-- 物品生成区域 -->
+        <div id="items-section" class="section active">
+            <div class="sub-menu">
+                <button class="sub-btn active" onclick="showItemType('item')">物品</button>
+                <button class="sub-btn" onclick="showItemType('weapon')">武器</button>
+                <button class="sub-btn" onclick="showItemType('avatar')">角色</button>
+            </div>
+
+            <div class="form-group">
+                <label id="item-label">选择物品：</label>
+                <select id="item-select">
+                    <option value="">加载中...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>数量：</label>
+                <input type="number" id="quantity" value="1" min="1" max="9999">
+            </div>
+
+            <button class="generate-btn" onclick="generateGiveCommand()">生成指令</button>
+        </div>
+
+        <!-- 任务区域 -->
+        <div id="quest-section" class="section">
+            <div class="sub-menu">
+                <button class="sub-btn active" onclick="showQuestType('add')">添加任务</button>
+                <button class="sub-btn" onclick="showQuestType('finish')">完成任务</button>
+            </div>
+
+            <div class="form-group">
+                <label>选择任务：</label>
+                <select id="quest-select">
+                    <option value="">加载中...</option>
+                </select>
+            </div>
+
+            <button class="generate-btn" onclick="generateQuestCommand()">生成指令</button>
+        </div>
+
+        <!-- 结果显示 -->
+        <div id="result-box" class="result-box">
+            <div class="command-text" id="command-text"></div>
+            <button class="copy-btn" onclick="copyCommand()">📋 复制指令</button>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        const API_BASE = '/api';
+        let currentItemType = 'item';
+        let currentQuestType = 'add';
+
+        // 页面加载时初始化
+        window.onload = function() {
+            loadItemData('item');
+            loadQuestData();
+        };
+
+        // 显示主功能区
+        function showSection(section) {
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(section + '-section').classList.add('active');
+            
+            document.getElementById('result-box').classList.remove('show');
+        }
+
+        // 显示物品类型
+        function showItemType(type) {
+            currentItemType = type;
+            
+            document.querySelectorAll('#items-section .sub-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const labels = {item: '物品', weapon: '武器', avatar: '角色'};
+            document.getElementById('item-label').textContent = '选择' + labels[type] + '：';
+            
+            loadItemData(type);
+            document.getElementById('result-box').classList.remove('show');
+        }
+
+        // 显示任务类型
+        function showQuestType(type) {
+            currentQuestType = type;
+            
+            document.querySelectorAll('#quest-section .sub-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('result-box').classList.remove('show');
+        }
+
+        // 加载物品数据
+        async function loadItemData(type) {
+            const select = document.getElementById('item-select');
+            select.innerHTML = '<option value="">加载中...</option>';
+            
+            const endpoints = {item: 'items', weapon: 'weapons', avatar: 'avatars'};
+            
+            try {
+                const response = await fetch(`${API_BASE}/${endpoints[type]}`);
+                const data = await response.json();
+                
+                select.innerHTML = '<option value="">请选择</option>';
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = `${item.name} (${item.id})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                select.innerHTML = '<option value="">加载失败</option>';
+                console.error('加载数据失败:', error);
+            }
+        }
+
+        // 加载任务数据
+        async function loadQuestData() {
+            const select = document.getElementById('quest-select');
+            select.innerHTML = '<option value="">加载中...</option>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/quests`);
+                const data = await response.json();
+                
+                select.innerHTML = '<option value="">请选择</option>';
+                data.forEach(quest => {
+                    const option = document.createElement('option');
+                    option.value = quest.id;
+                    option.textContent = `${quest.name} (${quest.id})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                select.innerHTML = '<option value="">加载失败</option>';
+                console.error('加载任务失败:', error);
+            }
+        }
+
+        // 生成物品指令
+        async function generateGiveCommand() {
+            const itemId = parseInt(document.getElementById('item-select').value);
+            const quantity = parseInt(document.getElementById('quantity').value);
+            
+            if (!itemId) {
+                alert('请选择物品！');
+                return;
+            }
+            
+            if (!quantity || quantity <= 0) {
+                alert('请输入有效数量！');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/command/give`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({itemId, quantity})
+                });
+                
+                const result = await response.json();
+                showResult(result.command);
+            } catch (error) {
+                alert('生成指令失败！');
+                console.error(error);
+            }
+        }
+
+        // 生成任务指令
+        async function generateQuestCommand() {
+            const questId = parseInt(document.getElementById('quest-select').value);
+            
+            if (!questId) {
+                alert('请选择任务！');
+                return;
+            }
+            
+            const endpoint = currentQuestType === 'add' ? 'quest/add' : 'quest/finish';
+            
+            try {
+                const response = await fetch(`${API_BASE}/command/${endpoint}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({questId})
+                });
+                
+                const result = await response.json();
+                showResult(result.command);
+            } catch (error) {
+                alert('生成指令失败！');
+                console.error(error);
+            }
+        }
+
+        // 显示结果
+        function showResult(command) {
+            document.getElementById('command-text').textContent = command;
+            document.getElementById('result-box').classList.add('show');
+        }
+
+        // 复制指令
+        function copyCommand() {
+            const command = document.getElementById('command-text').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ 已复制！';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
