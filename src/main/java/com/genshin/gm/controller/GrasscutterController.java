@@ -1,0 +1,134 @@
+package com.genshin.gm.controller;
+
+import com.genshin.gm.config.AppConfig;
+import com.genshin.gm.config.ConfigLoader;
+import com.genshin.gm.model.OpenCommandResponse;
+import com.genshin.gm.service.GrasscutterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 割草机控制器 - 处理前端与Grasscutter服务器的交互
+ */
+@RestController
+@RequestMapping("/api/grasscutter")
+@CrossOrigin(origins = "*")
+public class GrasscutterController {
+    private static final Logger logger = LoggerFactory.getLogger(GrasscutterController.class);
+
+    @Autowired
+    private GrasscutterService grasscutterService;
+
+    /**
+     * 获取配置信息（不包含敏感信息）
+     */
+    @GetMapping("/config")
+    public Map<String, Object> getConfig() {
+        AppConfig.GrasscutterConfig config = ConfigLoader.getConfig().getGrasscutter();
+        Map<String, Object> result = new HashMap<>();
+        result.put("serverUrl", config.getServerUrl());
+        result.put("apiPath", config.getApiPath());
+        result.put("fullUrl", config.getFullUrl());
+        result.put("hasConsoleToken", !config.getConsoleToken().isEmpty());
+        return result;
+    }
+
+    /**
+     * 测试连接
+     */
+    @PostMapping("/ping")
+    public OpenCommandResponse ping(@RequestBody Map<String, String> request) {
+        String serverUrl = request.getOrDefault("serverUrl",
+                ConfigLoader.getConfig().getGrasscutter().getFullUrl());
+        logger.info("测试连接到: {}", serverUrl);
+        return grasscutterService.ping(serverUrl);
+    }
+
+    /**
+     * 获取在线玩家
+     */
+    @PostMapping("/online")
+    public OpenCommandResponse getOnlinePlayers(@RequestBody Map<String, String> request) {
+        String serverUrl = request.getOrDefault("serverUrl",
+                ConfigLoader.getConfig().getGrasscutter().getFullUrl());
+        logger.info("获取在线玩家: {}", serverUrl);
+        return grasscutterService.getOnlinePlayers(serverUrl);
+    }
+
+    /**
+     * 发送验证码
+     */
+    @PostMapping("/sendCode")
+    public OpenCommandResponse sendCode(@RequestBody Map<String, Object> request) {
+        String serverUrl = (String) request.getOrDefault("serverUrl",
+                ConfigLoader.getConfig().getGrasscutter().getFullUrl());
+        int uid = Integer.parseInt(request.get("uid").toString());
+        logger.info("发送验证码到玩家 {}", uid);
+        return grasscutterService.sendCode(serverUrl, uid);
+    }
+
+    /**
+     * 验证验证码
+     */
+    @PostMapping("/verify")
+    public OpenCommandResponse verifyCode(@RequestBody Map<String, Object> request) {
+        String serverUrl = (String) request.getOrDefault("serverUrl",
+                ConfigLoader.getConfig().getGrasscutter().getFullUrl());
+        String token = (String) request.get("token");
+        int code = Integer.parseInt(request.get("code").toString());
+        logger.info("验证验证码");
+        return grasscutterService.verifyCode(serverUrl, token, code);
+    }
+
+    /**
+     * 执行命令（玩家模式）
+     */
+    @PostMapping("/command")
+    public OpenCommandResponse executeCommand(@RequestBody Map<String, String> request) {
+        String serverUrl = request.getOrDefault("serverUrl",
+                ConfigLoader.getConfig().getGrasscutter().getFullUrl());
+        String token = request.get("token");
+        String command = request.get("command");
+        logger.info("执行命令: {}", command);
+        return grasscutterService.executeCommand(serverUrl, token, command);
+    }
+
+    /**
+     * 执行命令（控制台模式）
+     */
+    @PostMapping("/console")
+    public OpenCommandResponse executeConsoleCommand(@RequestBody Map<String, String> request) {
+        String serverUrl = request.getOrDefault("serverUrl",
+                ConfigLoader.getConfig().getGrasscutter().getFullUrl());
+        String consoleToken = request.getOrDefault("consoleToken",
+                ConfigLoader.getConfig().getGrasscutter().getConsoleToken());
+        String command = request.get("command");
+
+        if (consoleToken.isEmpty()) {
+            OpenCommandResponse response = new OpenCommandResponse();
+            response.setRetcode(400);
+            response.setMessage("控制台Token未配置，请在config.json中设置consoleToken");
+            return response;
+        }
+
+        logger.info("执行控制台命令: {}", command);
+        return grasscutterService.executeConsoleCommand(serverUrl, consoleToken, command);
+    }
+
+    /**
+     * 获取运行模式
+     */
+    @PostMapping("/runmode")
+    public OpenCommandResponse getRunMode(@RequestBody Map<String, String> request) {
+        String serverUrl = request.getOrDefault("serverUrl",
+                ConfigLoader.getConfig().getGrasscutter().getFullUrl());
+        String token = request.get("token");
+        logger.info("获取运行模式");
+        return grasscutterService.getRunMode(serverUrl, token);
+    }
+}
