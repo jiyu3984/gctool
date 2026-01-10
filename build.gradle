@@ -30,3 +30,7 @@ test {
 bootJar {
     archiveFileName = 'genshin-gm-generator.jar'
 }
+
+jar {
+    enabled = false
+}
