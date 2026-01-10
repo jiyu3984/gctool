@@ -295,29 +295,173 @@
             cursor: not-allowed;
         }
 
-        .search-box {
-            margin-bottom: 15px;
-        }
-
-        .search-box input {
+        /* 选择输入框样式 */
+        .select-input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border: 2px solid #667eea;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .search-box input:focus {
-            outline: none;
+        .select-input:hover {
+            border-color: #764ba2;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .select-input.active {
             border-color: #764ba2;
         }
 
-        .select-wrapper {
-            position: relative;
+        .select-input .placeholder {
+            color: #999;
         }
 
-        .select-wrapper select {
-            max-height: 300px;
+        .select-input .value {
+            color: #333;
+        }
+
+        .select-input .arrow {
+            transition: transform 0.3s;
+        }
+
+        .select-input.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* 选择面板 */
+        .select-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            animation: fadeIn 0.2s;
+        }
+
+        .select-panel.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .select-panel-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 固定搜索栏 - 毛玻璃效果 */
+        .panel-search-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+            padding: 15px;
+        }
+
+        .panel-search-header input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .panel-search-header input:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        /* 选项列表 */
+        .panel-options {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .panel-option {
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .panel-option:hover {
+            background: #f0f0ff;
+            border-color: #667eea;
+        }
+
+        .panel-option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .panel-option.hidden {
+            display: none;
+        }
+
+        /* 面板底部按钮 */
+        .panel-footer {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-footer button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .panel-footer .confirm-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .panel-footer .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .panel-footer .cancel-btn {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .panel-footer .cancel-btn:hover {
+            background: #d0d0d0;
         }
     </style>
 </head>
@@ -353,13 +497,9 @@
 
             <div class="form-group">
                 <label id="item-label">选择物品：</label>
-                <div class="search-box">
-                    <input type="text" id="item-search" placeholder="🔍 搜索物品名称或ID..." oninput="filterItemSelect()">
-                </div>
-                <div class="select-wrapper">
-                    <select id="item-select" size="8">
-                        <option value="">加载中...</option>
-                    </select>
+                <div class="select-input" id="item-select-input" onclick="openItemPanel()">
+                    <span class="placeholder" id="item-display">点击选择物品...</span>
+                    <span class="arrow">▼</span>
                 </div>
             </div>
 
@@ -386,13 +526,9 @@
 
             <div class="form-group">
                 <label>选择任务：</label>
-                <div class="search-box">
-                    <input type="text" id="quest-search" placeholder="🔍 搜索任务名称或ID..." oninput="filterQuestSelect()">
-                </div>
-                <div class="select-wrapper">
-                    <select id="quest-select" size="8">
-                        <option value="">加载中...</option>
-                    </select>
+                <div class="select-input" id="quest-select-input" onclick="openQuestPanel()">
+                    <span class="placeholder" id="quest-display">点击选择任务...</span>
+                    <span class="arrow">▼</span>
                 </div>
             </div>
 
@@ -409,6 +545,38 @@
         <div id="result-box" class="result-box">
             <div class="command-text" id="command-text"></div>
             <button class="copy-btn" onclick="copyCommand()">📋 复制指令</button>
+        </div>
+    </div>
+
+    <!-- 物品选择面板 -->
+    <div class="select-panel" id="item-panel" onclick="closeItemPanel(event)">
+        <div class="select-panel-content" onclick="event.stopPropagation()">
+            <div class="panel-search-header">
+                <input type="text" id="item-panel-search" placeholder="🔍 搜索物品名称或ID..." oninput="filterPanelItems()">
+            </div>
+            <div class="panel-options" id="item-panel-options">
+                <!-- 动态生成选项 -->
+            </div>
+            <div class="panel-footer">
+                <button class="cancel-btn" onclick="closeItemPanel()">取消</button>
+                <button class="confirm-btn" onclick="confirmItemSelection()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务选择面板 -->
+    <div class="select-panel" id="quest-panel" onclick="closeQuestPanel(event)">
+        <div class="select-panel-content" onclick="event.stopPropagation()">
+            <div class="panel-search-header">
+                <input type="text" id="quest-panel-search" placeholder="🔍 搜索任务名称或ID..." oninput="filterPanelQuests()">
+            </div>
+            <div class="panel-options" id="quest-panel-options">
+                <!-- 动态生成选项 -->
+            </div>
+            <div class="panel-footer">
+                <button class="cancel-btn" onclick="closeQuestPanel()">取消</button>
+                <button class="confirm-btn" onclick="confirmQuestSelection()">确定</button>
+            </div>
         </div>
     </div>
 
@@ -432,6 +600,14 @@
         // 当前显示的完整数据
         let currentItemData = [];
         let currentQuestData = [];
+
+        // 选中的项
+        let selectedItemId = null;
+        let selectedItemName = '';
+        let selectedQuestId = null;
+        let selectedQuestName = '';
+        let tempSelectedItemId = null;
+        let tempSelectedQuestId = null;
 
         // 页面加载时初始化
         window.onload = function() {
@@ -462,15 +638,18 @@
             const labels = {item: '物品', weapon: '武器', avatar: '角色'};
             document.getElementById('item-label').textContent = '选择' + labels[type] + '：';
 
-            // 清空搜索框
-            document.getElementById('item-search').value = '';
+            // 清空选择
+            selectedItemId = null;
+            selectedItemName = '';
+            document.getElementById('item-display').textContent = '点击选择' + labels[type] + '...';
+            document.getElementById('item-display').className = 'placeholder';
 
             // 只在缓存不存在时才加载数据
             if (!cachedData[type + 's']) {
                 loadItemData(type);
             } else {
                 // 使用缓存数据
-                renderItemSelect(cachedData[type + 's']);
+                currentItemData = cachedData[type + 's'];
             }
 
             document.getElementById('result-box').classList.remove('show');
@@ -488,9 +667,6 @@
 
         // 加载物品数据（优化：缓存数据）
         async function loadItemData(type) {
-            const select = document.getElementById('item-select');
-            select.innerHTML = '<option value="">加载中...</option>';
-
             const endpoints = {item: 'items', weapon: 'weapons', avatar: 'avatars'};
             const cacheKey = type + 's';
 
@@ -500,60 +676,126 @@
 
                 // 缓存数据
                 cachedData[cacheKey] = data;
-
-                // 渲染到select
-                renderItemSelect(data);
+                currentItemData = data;
             } catch (error) {
-                select.innerHTML = '<option value="">加载失败</option>';
                 console.error('加载数据失败:', error);
             }
         }
 
-        // 渲染物品选择列表
-        function renderItemSelect(data) {
-            const select = document.getElementById('item-select');
-            currentItemData = data;
+        // 打开物品选择面板
+        function openItemPanel() {
+            // 如果数据还未加载，提示用户
+            if (!currentItemData || currentItemData.length === 0) {
+                alert('数据加载中，请稍候...');
+                return;
+            }
 
-            select.innerHTML = '<option value="">请选择</option>';
+            // 渲染面板选项
+            renderPanelItems(currentItemData);
+
+            // 显示面板
+            document.getElementById('item-panel').classList.add('active');
+            document.getElementById('item-select-input').classList.add('active');
+
+            // 聚焦搜索框
+            setTimeout(() => {
+                document.getElementById('item-panel-search').focus();
+            }, 100);
+
+            // 设置临时选中项
+            tempSelectedItemId = selectedItemId;
+        }
+
+        // 渲染面板物品选项
+        function renderPanelItems(data) {
+            const container = document.getElementById('item-panel-options');
+            container.innerHTML = '';
+
             data.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.id;
+                const option = document.createElement('div');
+                option.className = 'panel-option';
+                if (item.id === selectedItemId) {
+                    option.classList.add('selected');
+                }
                 option.textContent = `${item.name} (${item.id})`;
+                option.dataset.id = item.id;
                 option.dataset.name = item.name.toLowerCase();
-                option.dataset.id = item.id.toString();
-                select.appendChild(option);
+                option.onclick = () => selectPanelItem(item.id, option);
+                container.appendChild(option);
             });
         }
 
-        // 搜索过滤物品
-        function filterItemSelect() {
-            const searchText = document.getElementById('item-search').value.toLowerCase();
-            const select = document.getElementById('item-select');
-            const options = select.options;
+        // 选择面板中的项
+        function selectPanelItem(itemId, optionElement) {
+            // 移除其他选中状态
+            document.querySelectorAll('#item-panel-options .panel-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
 
-            for (let i = 1; i < options.length; i++) {
-                const option = options[i];
+            // 添加选中状态
+            optionElement.classList.add('selected');
+            tempSelectedItemId = itemId;
+        }
+
+        // 确认物品选择
+        function confirmItemSelection() {
+            if (!tempSelectedItemId) {
+                alert('请选择一个物品！');
+                return;
+            }
+
+            selectedItemId = tempSelectedItemId;
+
+            // 查找选中的物品信息
+            const item = currentItemData.find(i => i.id === selectedItemId);
+            if (item) {
+                selectedItemName = item.name;
+                const displayElement = document.getElementById('item-display');
+                displayElement.textContent = `${item.name} (${item.id})`;
+                displayElement.className = 'value';
+            }
+
+            closeItemPanel();
+        }
+
+        // 关闭物品面板
+        function closeItemPanel(event) {
+            if (event && event.target.id !== 'item-panel') return;
+
+            document.getElementById('item-panel').classList.remove('active');
+            document.getElementById('item-select-input').classList.remove('active');
+            document.getElementById('item-panel-search').value = '';
+
+            // 重新显示所有选项
+            document.querySelectorAll('#item-panel-options .panel-option').forEach(opt => {
+                opt.classList.remove('hidden');
+            });
+        }
+
+        // 过滤面板物品
+        function filterPanelItems() {
+            const searchText = document.getElementById('item-panel-search').value.toLowerCase();
+            const options = document.querySelectorAll('#item-panel-options .panel-option');
+
+            options.forEach(option => {
                 const name = option.dataset.name || '';
                 const id = option.dataset.id || '';
 
                 if (name.includes(searchText) || id.includes(searchText)) {
-                    option.style.display = '';
+                    option.classList.remove('hidden');
                 } else {
-                    option.style.display = 'none';
+                    option.classList.add('hidden');
                 }
-            }
+            });
         }
 
         // 加载任务数据（优化：缓存数据）
         async function loadQuestData() {
             // 如果已缓存，直接使用
             if (cachedData.quests) {
-                renderQuestSelect(cachedData.quests);
+                currentQuestData = cachedData.quests;
                 return;
             }
-
-            const select = document.getElementById('quest-select');
-            select.innerHTML = '<option value="">加载中...</option>';
 
             try {
                 const response = await fetch(`${API_BASE}/quests`);
@@ -561,53 +803,122 @@
 
                 // 缓存数据
                 cachedData.quests = data;
-
-                // 渲染到select
-                renderQuestSelect(data);
+                currentQuestData = data;
             } catch (error) {
-                select.innerHTML = '<option value="">加载失败</option>';
                 console.error('加载任务失败:', error);
             }
         }
 
-        // 渲染任务选择列表
-        function renderQuestSelect(data) {
-            const select = document.getElementById('quest-select');
-            currentQuestData = data;
+        // 打开任务选择面板
+        function openQuestPanel() {
+            // 如果数据还未加载，提示用户
+            if (!currentQuestData || currentQuestData.length === 0) {
+                alert('数据加载中，请稍候...');
+                return;
+            }
 
-            select.innerHTML = '<option value="">请选择</option>';
+            // 渲染面板选项
+            renderPanelQuests(currentQuestData);
+
+            // 显示面板
+            document.getElementById('quest-panel').classList.add('active');
+            document.getElementById('quest-select-input').classList.add('active');
+
+            // 聚焦搜索框
+            setTimeout(() => {
+                document.getElementById('quest-panel-search').focus();
+            }, 100);
+
+            // 设置临时选中项
+            tempSelectedQuestId = selectedQuestId;
+        }
+
+        // 渲染面板任务选项
+        function renderPanelQuests(data) {
+            const container = document.getElementById('quest-panel-options');
+            container.innerHTML = '';
+
             data.forEach(quest => {
-                const option = document.createElement('option');
-                option.value = quest.id;
+                const option = document.createElement('div');
+                option.className = 'panel-option';
+                if (quest.id === selectedQuestId) {
+                    option.classList.add('selected');
+                }
                 option.textContent = `${quest.name} (${quest.id})`;
+                option.dataset.id = quest.id;
                 option.dataset.name = quest.name.toLowerCase();
-                option.dataset.id = quest.id.toString();
-                select.appendChild(option);
+                option.onclick = () => selectPanelQuest(quest.id, option);
+                container.appendChild(option);
             });
         }
 
-        // 搜索过滤任务
-        function filterQuestSelect() {
-            const searchText = document.getElementById('quest-search').value.toLowerCase();
-            const select = document.getElementById('quest-select');
-            const options = select.options;
+        // 选择面板中的任务
+        function selectPanelQuest(questId, optionElement) {
+            // 移除其他选中状态
+            document.querySelectorAll('#quest-panel-options .panel-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
 
-            for (let i = 1; i < options.length; i++) {
-                const option = options[i];
+            // 添加选中状态
+            optionElement.classList.add('selected');
+            tempSelectedQuestId = questId;
+        }
+
+        // 确认任务选择
+        function confirmQuestSelection() {
+            if (!tempSelectedQuestId) {
+                alert('请选择一个任务！');
+                return;
+            }
+
+            selectedQuestId = tempSelectedQuestId;
+
+            // 查找选中的任务信息
+            const quest = currentQuestData.find(q => q.id === selectedQuestId);
+            if (quest) {
+                selectedQuestName = quest.name;
+                const displayElement = document.getElementById('quest-display');
+                displayElement.textContent = `${quest.name} (${quest.id})`;
+                displayElement.className = 'value';
+            }
+
+            closeQuestPanel();
+        }
+
+        // 关闭任务面板
+        function closeQuestPanel(event) {
+            if (event && event.target.id !== 'quest-panel') return;
+
+            document.getElementById('quest-panel').classList.remove('active');
+            document.getElementById('quest-select-input').classList.remove('active');
+            document.getElementById('quest-panel-search').value = '';
+
+            // 重新显示所有选项
+            document.querySelectorAll('#quest-panel-options .panel-option').forEach(opt => {
+                opt.classList.remove('hidden');
+            });
+        }
+
+        // 过滤面板任务
+        function filterPanelQuests() {
+            const searchText = document.getElementById('quest-panel-search').value.toLowerCase();
+            const options = document.querySelectorAll('#quest-panel-options .panel-option');
+
+            options.forEach(option => {
                 const name = option.dataset.name || '';
                 const id = option.dataset.id || '';
 
                 if (name.includes(searchText) || id.includes(searchText)) {
-                    option.style.display = '';
+                    option.classList.remove('hidden');
                 } else {
-                    option.style.display = 'none';
+                    option.classList.add('hidden');
                 }
-            }
+            });
         }
 
         // 生成物品指令
         async function generateGiveCommand() {
-            const itemId = parseInt(document.getElementById('item-select').value);
+            const itemId = selectedItemId;
             const quantity = parseInt(document.getElementById('quantity').value);
             const targetUid = document.getElementById('target-uid').value;
 
@@ -651,7 +962,7 @@
 
         // 生成任务指令
         async function generateQuestCommand() {
-            const questId = parseInt(document.getElementById('quest-select').value);
+            const questId = selectedQuestId;
             const targetUid = document.getElementById('quest-target-uid').value;
 
             if (!questId) {
@@ -715,7 +1026,6 @@
             try {
                 const response = await fetch('/api/grasscutter/config');
                 gcConfig = await response.json();
-                document.getElementById('server-url').value = gcConfig.fullUrl;
 
                 // 如果有配置Token，自动填充
                 if (gcConfig.hasConsoleToken) {
