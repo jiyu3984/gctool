@@ -1,0 +1,7 @@
+{
+  "frontend": {
+    "host": "localhost",
+    "port": 8080,
+    "autoOpen": true
+  }
+}
