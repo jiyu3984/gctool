@@ -21,7 +21,11 @@ public class GenshinGMApplication {
 
     public static void main(String[] args) {
         // 加载配置
-        ConfigLoader.loadConfig();
+        AppConfig config = ConfigLoader.loadConfig();
+
+        // 设置服务器端口
+        System.setProperty("server.port", String.valueOf(config.getFrontend().getPort()));
+
         SpringApplication.run(GenshinGMApplication.class, args);
     }
 

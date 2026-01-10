@@ -192,9 +192,148 @@
             color: #667eea;
             margin-top: 10px;
         }
+
+        /* 右上角状态指示器 */
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            min-width: 180px;
+        }
+
+        .status-indicator .status-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .status-indicator .status-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-value {
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .status-disconnected {
+            color: #dc3545;
+        }
+
+        .status-connected {
+            color: #28a745;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                align-items: flex-start;
+            }
+
+            .container {
+                padding: 20px;
+                margin-top: 80px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .menu {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .menu-btn {
+                font-size: 16px;
+                padding: 12px;
+            }
+
+            .status-indicator {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+
+            .status-indicator .status-item {
+                font-size: 12px;
+            }
+        }
+
+        .execute-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #28a745;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .execute-btn:hover {
+            background: #218838;
+        }
+
+        .execute-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #764ba2;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper select {
+            max-height: 300px;
+        }
     </style>
 </head>
 <body>
+    <!-- 右上角状态指示器 -->
+    <div class="status-indicator">
+        <div class="status-item">
+            <span class="status-label">服务器:</span>
+            <span id="server-status" class="status-value status-disconnected">未连接</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">在线:</span>
+            <span id="online-count" class="status-value">0人</span>
+        </div>
+    </div>
+
     <div class="container">
         <h1>⚔️ 原神 GM 指令生成器</h1>
 
@@ -202,7 +341,6 @@
         <div class="menu">
             <button class="menu-btn active" onclick="showSection('items')">物品生成</button>
             <button class="menu-btn" onclick="showSection('quest')">任务</button>
-            <button class="menu-btn" onclick="showSection('server')">服务器连接</button>
         </div>
 
         <!-- 物品生成区域 -->
@@ -215,9 +353,14 @@
 
             <div class="form-group">
                 <label id="item-label">选择物品：</label>
-                <select id="item-select">
-                    <option value="">加载中...</option>
-                </select>
+                <div class="search-box">
+                    <input type="text" id="item-search" placeholder="🔍 搜索物品名称或ID..." oninput="filterItemSelect()">
+                </div>
+                <div class="select-wrapper">
+                    <select id="item-select" size="8">
+                        <option value="">加载中...</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">
@@ -225,7 +368,13 @@
                 <input type="number" id="quantity" value="1" min="1" max="9999">
             </div>
 
+            <div class="form-group">
+                <label>目标UID（可选）：</label>
+                <input type="number" id="target-uid" placeholder="不填则为@，填写则为 @UID">
+            </div>
+
             <button class="generate-btn" onclick="generateGiveCommand()">生成指令</button>
+            <button class="execute-btn" id="execute-item-btn" onclick="executeGeneratedCommand('items')" disabled>向服务器执行指令</button>
         </div>
 
         <!-- 任务区域 -->
@@ -237,49 +386,23 @@
 
             <div class="form-group">
                 <label>选择任务：</label>
-                <select id="quest-select">
-                    <option value="">加载中...</option>
-                </select>
+                <div class="search-box">
+                    <input type="text" id="quest-search" placeholder="🔍 搜索任务名称或ID..." oninput="filterQuestSelect()">
+                </div>
+                <div class="select-wrapper">
+                    <select id="quest-select" size="8">
+                        <option value="">加载中...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>目标UID（可选）：</label>
+                <input type="number" id="quest-target-uid" placeholder="不填则为@，填写则为 @UID">
             </div>
 
             <button class="generate-btn" onclick="generateQuestCommand()">生成指令</button>
-        </div>
-
-        <!-- 服务器连接区域 -->
-        <div id="server-section" class="section">
-            <div class="form-group">
-                <label>服务器地址：</label>
-                <input type="text" id="server-url" placeholder="http://127.0.0.1:443/opencommand/api">
-            </div>
-
-            <div class="form-group">
-                <label>连接状态：</label>
-                <div id="connection-status" style="padding: 10px; background: #f0f0f0; border-radius: 5px; text-align: center;">
-                    未连接
-                </div>
-            </div>
-
-            <button class="generate-btn" onclick="testConnection()">测试连接</button>
-
-            <div id="command-execute-box" style="display: none; margin-top: 20px;">
-                <div class="form-group">
-                    <label>控制台Token（可选）：</label>
-                    <input type="password" id="console-token" placeholder="输入控制台Token以直接执行命令">
-                </div>
-
-                <div class="form-group">
-                    <label>执行命令：</label>
-                    <input type="text" id="gc-command" placeholder="例如: give 10001 x100">
-                </div>
-
-                <button class="generate-btn" onclick="executeGCCommand()">执行命令</button>
-            </div>
-
-            <div id="online-players-box" style="display: none; margin-top: 20px;">
-                <h3 style="margin-bottom: 10px;">在线玩家：</h3>
-                <div id="online-players-list" style="background: #f5f5f5; padding: 10px; border-radius: 5px;">
-                </div>
-            </div>
+            <button class="execute-btn" id="execute-quest-btn" onclick="executeGeneratedCommand('quest')" disabled>向服务器执行指令</button>
         </div>
 
         <!-- 结果显示 -->
@@ -294,12 +417,28 @@
         const API_BASE = '/api';
         let currentItemType = 'item';
         let currentQuestType = 'add';
+        let gcConfig = null;
+        let isServerConnected = false;
+        let lastGeneratedCommand = '';
+
+        // 数据缓存 - 避免重复加载
+        let cachedData = {
+            items: null,
+            weapons: null,
+            avatars: null,
+            quests: null
+        };
+
+        // 当前显示的完整数据
+        let currentItemData = [];
+        let currentQuestData = [];
 
         // 页面加载时初始化
         window.onload = function() {
             loadItemData('item');
             loadQuestData();
             loadGCConfig();
+            autoConnectServer();
         };
 
         // 显示主功能区
@@ -313,17 +452,27 @@
             document.getElementById('result-box').classList.remove('show');
         }
 
-        // 显示物品类型
+        // 显示物品类型（优化：使用缓存，避免重复加载）
         function showItemType(type) {
             currentItemType = type;
-            
+
             document.querySelectorAll('#items-section .sub-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            
+
             const labels = {item: '物品', weapon: '武器', avatar: '角色'};
             document.getElementById('item-label').textContent = '选择' + labels[type] + '：';
-            
-            loadItemData(type);
+
+            // 清空搜索框
+            document.getElementById('item-search').value = '';
+
+            // 只在缓存不存在时才加载数据
+            if (!cachedData[type + 's']) {
+                loadItemData(type);
+            } else {
+                // 使用缓存数据
+                renderItemSelect(cachedData[type + 's']);
+            }
+
             document.getElementById('result-box').classList.remove('show');
         }
 
@@ -337,49 +486,122 @@
             document.getElementById('result-box').classList.remove('show');
         }
 
-        // 加载物品数据
+        // 加载物品数据（优化：缓存数据）
         async function loadItemData(type) {
             const select = document.getElementById('item-select');
             select.innerHTML = '<option value="">加载中...</option>';
-            
+
             const endpoints = {item: 'items', weapon: 'weapons', avatar: 'avatars'};
-            
+            const cacheKey = type + 's';
+
             try {
                 const response = await fetch(`${API_BASE}/${endpoints[type]}`);
                 const data = await response.json();
-                
-                select.innerHTML = '<option value="">请选择</option>';
-                data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = `${item.name} (${item.id})`;
-                    select.appendChild(option);
-                });
+
+                // 缓存数据
+                cachedData[cacheKey] = data;
+
+                // 渲染到select
+                renderItemSelect(data);
             } catch (error) {
                 select.innerHTML = '<option value="">加载失败</option>';
                 console.error('加载数据失败:', error);
             }
         }
 
-        // 加载任务数据
+        // 渲染物品选择列表
+        function renderItemSelect(data) {
+            const select = document.getElementById('item-select');
+            currentItemData = data;
+
+            select.innerHTML = '<option value="">请选择</option>';
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${item.name} (${item.id})`;
+                option.dataset.name = item.name.toLowerCase();
+                option.dataset.id = item.id.toString();
+                select.appendChild(option);
+            });
+        }
+
+        // 搜索过滤物品
+        function filterItemSelect() {
+            const searchText = document.getElementById('item-search').value.toLowerCase();
+            const select = document.getElementById('item-select');
+            const options = select.options;
+
+            for (let i = 1; i < options.length; i++) {
+                const option = options[i];
+                const name = option.dataset.name || '';
+                const id = option.dataset.id || '';
+
+                if (name.includes(searchText) || id.includes(searchText)) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        }
+
+        // 加载任务数据（优化：缓存数据）
         async function loadQuestData() {
+            // 如果已缓存，直接使用
+            if (cachedData.quests) {
+                renderQuestSelect(cachedData.quests);
+                return;
+            }
+
             const select = document.getElementById('quest-select');
             select.innerHTML = '<option value="">加载中...</option>';
-            
+
             try {
                 const response = await fetch(`${API_BASE}/quests`);
                 const data = await response.json();
-                
-                select.innerHTML = '<option value="">请选择</option>';
-                data.forEach(quest => {
-                    const option = document.createElement('option');
-                    option.value = quest.id;
-                    option.textContent = `${quest.name} (${quest.id})`;
-                    select.appendChild(option);
-                });
+
+                // 缓存数据
+                cachedData.quests = data;
+
+                // 渲染到select
+                renderQuestSelect(data);
             } catch (error) {
                 select.innerHTML = '<option value="">加载失败</option>';
                 console.error('加载任务失败:', error);
+            }
+        }
+
+        // 渲染任务选择列表
+        function renderQuestSelect(data) {
+            const select = document.getElementById('quest-select');
+            currentQuestData = data;
+
+            select.innerHTML = '<option value="">请选择</option>';
+            data.forEach(quest => {
+                const option = document.createElement('option');
+                option.value = quest.id;
+                option.textContent = `${quest.name} (${quest.id})`;
+                option.dataset.name = quest.name.toLowerCase();
+                option.dataset.id = quest.id.toString();
+                select.appendChild(option);
+            });
+        }
+
+        // 搜索过滤任务
+        function filterQuestSelect() {
+            const searchText = document.getElementById('quest-search').value.toLowerCase();
+            const select = document.getElementById('quest-select');
+            const options = select.options;
+
+            for (let i = 1; i < options.length; i++) {
+                const option = options[i];
+                const name = option.dataset.name || '';
+                const id = option.dataset.id || '';
+
+                if (name.includes(searchText) || id.includes(searchText)) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
             }
         }
 
@@ -387,26 +609,40 @@
         async function generateGiveCommand() {
             const itemId = parseInt(document.getElementById('item-select').value);
             const quantity = parseInt(document.getElementById('quantity').value);
-            
+            const targetUid = document.getElementById('target-uid').value;
+
             if (!itemId) {
                 alert('请选择物品！');
                 return;
             }
-            
+
             if (!quantity || quantity <= 0) {
                 alert('请输入有效数量！');
                 return;
             }
-            
+
             try {
                 const response = await fetch(`${API_BASE}/command/give`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({itemId, quantity})
                 });
-                
+
                 const result = await response.json();
-                showResult(result.command);
+                let command = result.command;
+
+                // 添加UID
+                if (targetUid) {
+                    command += ' @' + targetUid;
+                } else {
+                    command += ' @';
+                }
+
+                showResult(command);
+                lastGeneratedCommand = command;
+
+                // 如果服务器已连接，启用执行按钮
+                document.getElementById('execute-item-btn').disabled = !isServerConnected;
             } catch (error) {
                 alert('生成指令失败！');
                 console.error(error);
@@ -416,23 +652,37 @@
         // 生成任务指令
         async function generateQuestCommand() {
             const questId = parseInt(document.getElementById('quest-select').value);
-            
+            const targetUid = document.getElementById('quest-target-uid').value;
+
             if (!questId) {
                 alert('请选择任务！');
                 return;
             }
-            
+
             const endpoint = currentQuestType === 'add' ? 'quest/add' : 'quest/finish';
-            
+
             try {
                 const response = await fetch(`${API_BASE}/command/${endpoint}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({questId})
                 });
-                
+
                 const result = await response.json();
-                showResult(result.command);
+                let command = result.command;
+
+                // 添加UID
+                if (targetUid) {
+                    command += ' @' + targetUid;
+                } else {
+                    command += ' @';
+                }
+
+                showResult(command);
+                lastGeneratedCommand = command;
+
+                // 如果服务器已连接，启用执行按钮
+                document.getElementById('execute-quest-btn').disabled = !isServerConnected;
             } catch (error) {
                 alert('生成指令失败！');
                 console.error(error);
@@ -464,61 +714,52 @@
         async function loadGCConfig() {
             try {
                 const response = await fetch('/api/grasscutter/config');
-                const config = await response.json();
-                document.getElementById('server-url').value = config.fullUrl;
+                gcConfig = await response.json();
+                document.getElementById('server-url').value = gcConfig.fullUrl;
+
+                // 如果有配置Token，自动填充
+                if (gcConfig.hasConsoleToken) {
+                    console.log('已从配置加载控制台Token');
+                }
             } catch (error) {
                 console.error('加载配置失败:', error);
             }
         }
 
-        // 测试连接
-        async function testConnection() {
-            const serverUrl = document.getElementById('server-url').value;
-            const statusDiv = document.getElementById('connection-status');
+        // 自动连接服务器
+        async function autoConnectServer() {
+            // 等待配置加载完成
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-            if (!serverUrl) {
-                alert('请输入服务器地址！');
+            if (!gcConfig) {
+                console.log('配置未加载，跳过自动连接');
                 return;
             }
-
-            statusDiv.textContent = '连接中...';
-            statusDiv.style.background = '#fff3cd';
-            statusDiv.style.color = '#856404';
 
             try {
                 const response = await fetch('/api/grasscutter/ping', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({serverUrl})
+                    body: JSON.stringify({serverUrl: gcConfig.fullUrl})
                 });
 
                 const result = await response.json();
 
                 if (result.retcode === 200) {
-                    statusDiv.textContent = '✅ 连接成功！';
-                    statusDiv.style.background = '#d4edda';
-                    statusDiv.style.color = '#155724';
-
-                    // 显示命令执行区域
-                    document.getElementById('command-execute-box').style.display = 'block';
-
-                    // 加载在线玩家
-                    loadOnlinePlayers(serverUrl);
+                    isServerConnected = true;
+                    // 获取在线玩家数
+                    getOnlinePlayerCount(gcConfig.fullUrl);
                 } else {
-                    statusDiv.textContent = '❌ 连接失败: ' + result.message;
-                    statusDiv.style.background = '#f8d7da';
-                    statusDiv.style.color = '#721c24';
+                    updateServerStatus(false, 0);
                 }
             } catch (error) {
-                statusDiv.textContent = '❌ 连接错误: ' + error.message;
-                statusDiv.style.background = '#f8d7da';
-                statusDiv.style.color = '#721c24';
-                console.error('连接失败:', error);
+                console.error('自动连接失败:', error);
+                updateServerStatus(false, 0);
             }
         }
 
-        // 加载在线玩家
-        async function loadOnlinePlayers(serverUrl) {
+        // 获取在线玩家数量
+        async function getOnlinePlayerCount(serverUrl) {
             try {
                 const response = await fetch('/api/grasscutter/online', {
                     method: 'POST',
@@ -529,65 +770,75 @@
                 const result = await response.json();
 
                 if (result.retcode === 200 && result.data) {
-                    const playerBox = document.getElementById('online-players-box');
-                    const playerList = document.getElementById('online-players-list');
-
-                    if (result.data.count > 0) {
-                        playerBox.style.display = 'block';
-                        playerList.innerHTML = `<p>在线玩家数: ${result.data.count}</p>`;
-
-                        if (result.data.playerList) {
-                            result.data.playerList.forEach(player => {
-                                playerList.innerHTML += `<p>- ${player}</p>`;
-                            });
-                        }
-                    } else {
-                        playerBox.style.display = 'block';
-                        playerList.innerHTML = '<p>当前无在线玩家</p>';
-                    }
+                    const count = result.data.count || 0;
+                    updateServerStatus(true, count);
                 }
             } catch (error) {
-                console.error('加载在线玩家失败:', error);
+                console.error('获取在线玩家失败:', error);
+                updateServerStatus(true, 0);
             }
         }
 
-        // 执行Grasscutter命令
-        async function executeGCCommand() {
-            const serverUrl = document.getElementById('server-url').value;
-            const consoleToken = document.getElementById('console-token').value;
-            const command = document.getElementById('gc-command').value;
+        // 更新服务器状态指示器
+        function updateServerStatus(connected, onlineCount) {
+            const statusElement = document.getElementById('server-status');
+            const countElement = document.getElementById('online-count');
 
-            if (!command) {
-                alert('请输入要执行的命令！');
+            if (connected) {
+                statusElement.textContent = '已连接';
+                statusElement.className = 'status-value status-connected';
+            } else {
+                statusElement.textContent = '未连接';
+                statusElement.className = 'status-value status-disconnected';
+            }
+
+            countElement.textContent = onlineCount + '人';
+        }
+
+        // 执行生成的指令
+        async function executeGeneratedCommand(type) {
+            if (!lastGeneratedCommand) {
+                alert('请先生成指令！');
                 return;
             }
 
-            if (!consoleToken) {
-                alert('请输入控制台Token！\n\n您可以在config.json中配置默认Token，或在此处输入。');
+            if (!isServerConnected) {
+                alert('服务器未连接！');
                 return;
             }
+
+            if (!gcConfig || !gcConfig.hasConsoleToken) {
+                alert('请在config.json中配置consoleToken！');
+                return;
+            }
+
+            const btn = type === 'items' ? document.getElementById('execute-item-btn') : document.getElementById('execute-quest-btn');
+            btn.disabled = true;
+            btn.textContent = '执行中...';
 
             try {
                 const response = await fetch('/api/grasscutter/console', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        serverUrl,
-                        consoleToken,
-                        command
+                        serverUrl: gcConfig.fullUrl,
+                        command: lastGeneratedCommand
                     })
                 });
 
                 const result = await response.json();
 
                 if (result.retcode === 200) {
-                    showResult('✅ 命令执行成功！\n\n' + (result.data || '无返回信息'));
+                    alert('✅ 指令执行成功！\n\n' + (result.data || '无返回信息'));
                 } else {
-                    showResult('❌ 命令执行失败: ' + result.message);
+                    alert('❌ 指令执行失败: ' + result.message);
                 }
             } catch (error) {
-                alert('执行命令失败: ' + error.message);
-                console.error('执行命令失败:', error);
+                alert('执行失败: ' + error.message);
+                console.error('执行指令失败:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '向服务器执行指令';
             }
         }
     </script>
