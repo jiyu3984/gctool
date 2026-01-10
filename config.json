@@ -3,5 +3,11 @@
     "host": "localhost",
     "port": 8080,
     "autoOpen": true
+  },
+  "grasscutter": {
+    "serverUrl": "http://127.0.0.1:443",
+    "apiPath": "/opencommand/api",
+    "consoleToken": "",
+    "timeout": 10000
   }
 }
