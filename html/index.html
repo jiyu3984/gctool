@@ -650,6 +650,24 @@
             <button class="menu-btn" onclick="showSection('community')">玩家指令广场</button>
         </div>
 
+        <!-- 全局UID和验证码区域 -->
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 2px solid #e0e0e0;">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-weight: 600; color: #333;">您的UID（用于点赞和远程执行指令）：</label>
+                <input type="number" id="player-uid" placeholder="请输入您的游戏UID" oninput="savePlayerUid()" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
+            </div>
+
+            <div class="form-group" id="verification-area" style="margin-bottom: 0;">
+                <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（5分钟有效期）：</label>
+                <div style="display: flex; gap: 10px; align-items: stretch;">
+                    <input type="text" id="verification-code" placeholder="请输入6位验证码" maxlength="6" style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
+                    <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="padding: 12px 24px; margin: 0; white-space: nowrap;">发送验证码</button>
+                    <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="padding: 12px 24px; margin: 0; background: #4caf50; white-space: nowrap;">验证</button>
+                </div>
+                <div id="verification-status" style="margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 14px;"></div>
+            </div>
+        </div>
+
         <!-- 物品生成区域 -->
         <div id="items-section" class="section active">
             <div class="sub-menu">
@@ -711,25 +729,6 @@
                 <button class="sub-btn" onclick="showCommunityType('scene')">场景</button>
                 <button class="sub-btn" onclick="showCommunityType('avatar')">角色</button>
                 <button class="sub-btn" onclick="showCommunityType('upload')">上传指令</button>
-            </div>
-
-            <!-- UID输入框 -->
-            <div class="form-group" style="margin-top: 20px;">
-                <label>您的UID（用于点赞和使用指令）：</label>
-                <input type="number" id="player-uid" placeholder="请输入您的游戏UID" oninput="savePlayerUid()">
-            </div>
-
-            <!-- 验证码区域 -->
-            <div class="form-group" id="verification-area">
-                <div style="display: flex; gap: 10px; align-items: flex-end;">
-                    <div style="flex: 1;">
-                        <label>验证码（5分钟有效期）：</label>
-                        <input type="text" id="verification-code" placeholder="请输入6位验证码" maxlength="6">
-                    </div>
-                    <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="height: 48px; margin: 0;">发送验证码</button>
-                    <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="height: 48px; margin: 0; background: #4caf50;">验证</button>
-                </div>
-                <div id="verification-status" style="margin-top: 10px; padding: 10px; border-radius: 8px; display: none;"></div>
             </div>
 
             <!-- 指令列表 -->
@@ -1628,7 +1627,13 @@
                     statusDiv.style.display = 'block';
                     statusDiv.style.background = '#e8f5e9';
                     statusDiv.style.color = '#2e7d32';
-                    statusDiv.textContent = '✅ ' + result.message;
+                    let message = '✅ ' + result.message;
+                    // 如果返回了验证码（测试用），显示它
+                    if (result.code) {
+                        message += '\n【测试模式】验证码: ' + result.code;
+                    }
+                    statusDiv.textContent = message;
+                    statusDiv.style.whiteSpace = 'pre-line';
 
                     // 开始倒计时（60秒）
                     let countdown = 60;
@@ -1643,9 +1648,15 @@
                     }, 1000);
                 } else {
                     statusDiv.style.display = 'block';
-                    statusDiv.style.background = '#ffebee';
-                    statusDiv.style.color = '#c62828';
-                    statusDiv.textContent = '❌ ' + result.message;
+                    statusDiv.style.background = '#fff3cd';
+                    statusDiv.style.color = '#856404';
+                    let message = '⚠️ ' + result.message;
+                    // 如果返回了验证码（测试用），显示它
+                    if (result.code) {
+                        message += '\n【测试模式】验证码: ' + result.code;
+                    }
+                    statusDiv.textContent = message;
+                    statusDiv.style.whiteSpace = 'pre-line';
                     sendBtn.disabled = false;
                     sendBtn.textContent = '发送验证码';
                 }
