@@ -9,5 +9,12 @@
     "apiPath": "/opencommand/api",
     "consoleToken": "",
     "timeout": 10000
+  },
+  "mongodb": {
+    "host": "localhost",
+    "port": 27017,
+    "database": "genshin_gm",
+    "username": "",
+    "password": ""
   }
 }

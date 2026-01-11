@@ -6,6 +6,7 @@ package com.genshin.gm.config;
 public class AppConfig {
     private FrontendConfig frontend;
     private GrasscutterConfig grasscutter;
+    private MongoDBConfig mongodb;
 
     public FrontendConfig getFrontend() {
         return frontend;
@@ -21,6 +22,14 @@ public class AppConfig {
 
     public void setGrasscutter(GrasscutterConfig grasscutter) {
         this.grasscutter = grasscutter;
+    }
+
+    public MongoDBConfig getMongodb() {
+        return mongodb;
+    }
+
+    public void setMongodb(MongoDBConfig mongodb) {
+        this.mongodb = mongodb;
     }
 
     public static class FrontendConfig {
@@ -97,6 +106,67 @@ public class AppConfig {
 
         public String getFullUrl() {
             return serverUrl + apiPath;
+        }
+    }
+
+    public static class MongoDBConfig {
+        private String host = "localhost";
+        private int port = 27017;
+        private String database = "genshin_gm";
+        private String username = "";
+        private String password = "";
+
+        public String getHost() {
+            return host;
+        }
+
+        public void setHost(String host) {
+            this.host = host;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public void setPort(int port) {
+            this.port = port;
+        }
+
+        public String getDatabase() {
+            return database;
+        }
+
+        public void setDatabase(String database) {
+            this.database = database;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public String getConnectionString() {
+            StringBuilder sb = new StringBuilder("mongodb://");
+            if (username != null && !username.isEmpty()) {
+                sb.append(username);
+                if (password != null && !password.isEmpty()) {
+                    sb.append(":").append(password);
+                }
+                sb.append("@");
+            }
+            sb.append(host).append(":").append(port).append("/").append(database);
+            return sb.toString();
         }
     }
 }
