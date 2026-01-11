@@ -22,27 +22,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VerificationService {
     private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
 
-    // 验证码有效期（分钟）
-    private static final int EXPIRY_MINUTES = 5;
+    // 验证码有效期（分钟）- OpenCommand默认60秒，我们设置为1分钟
+    private static final int EXPIRY_MINUTES = 1;
 
-    // 存储验证码的Map: UID -> VerificationCode
+    // 存储验证信息的Map: UID -> VerificationCode
     private final Map<String, VerificationCode> verificationCodes = new ConcurrentHashMap<>();
 
     @Autowired
     private GrasscutterService grasscutterService;
 
-    private final Random random = new Random();
-
     /**
-     * 生成6位数字验证码
-     */
-    private String generateCode() {
-        int code = 100000 + random.nextInt(900000);
-        return String.valueOf(code);
-    }
-
-    /**
-     * 发送验证码到玩家游戏内邮箱
+     * 发送验证码到玩家（通过OpenCommand的sendCode API）
      * @param uid 玩家UID
      * @return 操作结果
      */
@@ -50,54 +40,56 @@ public class VerificationService {
         Map<String, Object> result = new ConcurrentHashMap<>();
 
         try {
-            // 生成验证码
-            String code = generateCode();
+            int uidInt = Integer.parseInt(uid);
             LocalDateTime expiryTime = LocalDateTime.now().plusMinutes(EXPIRY_MINUTES);
 
-            // 存储验证码
-            VerificationCode verificationCode = new VerificationCode(uid, code, expiryTime);
-            verificationCodes.put(uid, verificationCode);
-
-            logger.info("为UID {} 生成验证码: {}, 过期时间: {}", uid, code, expiryTime);
-
-            // 通过OpenCommand发送邮件到游戏内
+            // 调用OpenCommand的sendCode API
             String serverUrl = ConfigLoader.getConfig().getGrasscutter().getFullUrl();
-            String consoleToken = ConfigLoader.getConfig().getGrasscutter().getConsoleToken();
 
-            // 构建发送邮件的指令 - 使用sendmail指令
-            // Grasscutter sendmail格式可能是: sendmail <player> <title> <content> [sender] [itemId:count]
-            // 尝试简化格式，不使用引号
-            String mailCommand = String.format(
-                "sendmail %s 验证码 您的验证码是%s有效期5分钟",
-                uid, code
-            );
+            logger.info("为UID {} 调用sendCode API", uid);
 
-            logger.info("发送验证码邮件指令: {}", mailCommand);
+            OpenCommandResponse response = grasscutterService.sendCode(serverUrl, uidInt);
 
-            OpenCommandResponse response = grasscutterService.executeConsoleCommand(
-                serverUrl,
-                consoleToken,
-                mailCommand
-            );
-
-            logger.info("发送邮件响应 - retcode: {}, message: {}, data: {}",
+            logger.info("sendCode响应 - retcode: {}, message: {}, data: {}",
                 response != null ? response.getRetcode() : "null",
                 response != null ? response.getMessage() : "null",
                 response != null ? response.getData() : "null"
             );
 
             if (response != null && response.getRetcode() == 200) {
+                // OpenCommand返回token，保存它
+                String token = response.getData() != null ? response.getData().toString() : null;
+
+                if (token == null || token.isEmpty()) {
+                    result.put("success", false);
+                    result.put("message", "未收到token，请确保玩家在线");
+                    return result;
+                }
+
+                // 存储token和过期时间
+                VerificationCode verificationCode = new VerificationCode(uid, token, expiryTime);
+                verificationCodes.put(uid, verificationCode);
+
+                logger.info("UID {} 的验证码已发送，token已保存，过期时间: {}", uid, expiryTime);
+
                 result.put("success", true);
-                result.put("message", "验证码已发送到游戏内邮箱，请查收");
+                result.put("message", "验证码已发送，请在游戏中查看（4位数字）");
                 result.put("expiryMinutes", EXPIRY_MINUTES);
             } else {
-                // 发送失败，清除验证码
-                verificationCodes.remove(uid);
                 result.put("success", false);
-                result.put("message", "发送验证码失败: " + (response != null ? response.getMessage() : "未知错误"));
-                logger.error("发送邮件失败 - response: {}", response);
+                String errorMsg = response != null ? response.getMessage() : "未知错误";
+                if (errorMsg.contains("not online") || errorMsg.contains("离线")) {
+                    result.put("message", "玩家不在线，请先登录游戏");
+                } else {
+                    result.put("message", "发送失败: " + errorMsg);
+                }
+                logger.error("sendCode失败 - response: {}", response);
             }
 
+        } catch (NumberFormatException e) {
+            logger.error("UID格式错误: {}", uid, e);
+            result.put("success", false);
+            result.put("message", "UID格式错误，请输入数字");
         } catch (Exception e) {
             logger.error("发送验证码异常", e);
             verificationCodes.remove(uid);
@@ -109,40 +101,66 @@ public class VerificationService {
     }
 
     /**
-     * 验证验证码
+     * 验证验证码（通过OpenCommand的verify API）
      * @param uid 玩家UID
-     * @param code 输入的验证码
+     * @param code 输入的验证码（4位数字）
      * @return 验证结果
      */
     public Map<String, Object> verifyCode(String uid, String code) {
         Map<String, Object> result = new ConcurrentHashMap<>();
 
-        VerificationCode storedCode = verificationCodes.get(uid);
+        try {
+            VerificationCode storedInfo = verificationCodes.get(uid);
 
-        if (storedCode == null) {
-            result.put("success", false);
-            result.put("message", "验证码不存在或已过期，请重新获取");
-            return result;
-        }
+            if (storedInfo == null) {
+                result.put("success", false);
+                result.put("message", "请先发送验证码");
+                return result;
+            }
 
-        if (storedCode.isExpired()) {
-            verificationCodes.remove(uid);
-            result.put("success", false);
-            result.put("message", "验证码已过期，请重新获取");
-            return result;
-        }
+            if (storedInfo.isExpired()) {
+                verificationCodes.remove(uid);
+                result.put("success", false);
+                result.put("message", "验证码已过期，请重新获取");
+                return result;
+            }
 
-        if (storedCode.getCode().equals(code)) {
-            // 验证成功，标记为已验证
-            storedCode.setVerified(true);
-            result.put("success", true);
-            result.put("message", "验证成功");
-            result.put("expiryTime", storedCode.getExpiryTime().toString());
-            logger.info("UID {} 验证成功", uid);
-        } else {
+            // 调用OpenCommand的verify API
+            String serverUrl = ConfigLoader.getConfig().getGrasscutter().getFullUrl();
+            String token = storedInfo.getToken();
+            int codeInt = Integer.parseInt(code);
+
+            logger.info("验证UID {} 的验证码: {}", uid, code);
+
+            OpenCommandResponse response = grasscutterService.verifyCode(serverUrl, token, codeInt);
+
+            logger.info("verify响应 - retcode: {}, message: {}",
+                response != null ? response.getRetcode() : "null",
+                response != null ? response.getMessage() : "null"
+            );
+
+            if (response != null && response.getRetcode() == 200) {
+                // 验证成功，标记为已验证
+                storedInfo.setVerified(true);
+                result.put("success", true);
+                result.put("message", "验证成功");
+                result.put("expiryTime", storedInfo.getExpiryTime().toString());
+                logger.info("UID {} 验证成功", uid);
+            } else {
+                result.put("success", false);
+                String errorMsg = response != null ? response.getMessage() : "未知错误";
+                result.put("message", "验证失败: " + errorMsg);
+                logger.warn("UID {} 验证失败: {}", uid, errorMsg);
+            }
+
+        } catch (NumberFormatException e) {
             result.put("success", false);
-            result.put("message", "验证码错误");
-            logger.warn("UID {} 验证码错误: 输入={}, 实际={}", uid, code, storedCode.getCode());
+            result.put("message", "验证码格式错误，请输入4位数字");
+            logger.error("验证码格式错误: {}", code, e);
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "验证失败: " + e.getMessage());
+            logger.error("验证异常", e);
         }
 
         return result;
@@ -195,6 +213,19 @@ public class VerificationService {
         result.put("message", code.isVerified() ? "已验证" : "待验证");
 
         return result;
+    }
+
+    /**
+     * 获取已验证的token
+     * @param uid 玩家UID
+     * @return token，如果未验证或已过期返回null
+     */
+    public String getVerifiedToken(String uid) {
+        VerificationCode code = verificationCodes.get(uid);
+        if (code == null || !code.isVerified() || code.isExpired()) {
+            return null;
+        }
+        return code.getToken();
     }
 
     /**
