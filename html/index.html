@@ -659,10 +659,10 @@
 
             <div class="form-group" id="verification-area" style="margin-bottom: 0;">
                 <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（5分钟有效期）：</label>
-                <div style="display: flex; gap: 10px; align-items: stretch;">
-                    <input type="text" id="verification-code" placeholder="请输入6位验证码" maxlength="6" style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
-                    <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="padding: 12px 24px; margin: 0; white-space: nowrap;">发送验证码</button>
-                    <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="padding: 12px 24px; margin: 0; background: #4caf50; white-space: nowrap;">验证</button>
+                <input type="text" id="verification-code" placeholder="请输入6位验证码" maxlength="6" style="width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; letter-spacing: 3px; text-align: center; font-weight: 600; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="flex: 1; padding: 14px; margin: 0; font-size: 16px;">发送验证码</button>
+                    <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="flex: 1; padding: 14px; margin: 0; background: #4caf50; font-size: 16px;">验证</button>
                 </div>
                 <div id="verification-status" style="margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 14px;"></div>
             </div>
