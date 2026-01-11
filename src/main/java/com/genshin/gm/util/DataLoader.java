@@ -37,13 +37,23 @@ public class DataLoader {
         
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
+            boolean isFirstLine = true;
+
             while ((line = reader.readLine()) != null) {
+                // 移除UTF-8 BOM字符（如果存在于第一行）
+                if (isFirstLine) {
+                    if (line.length() > 0 && line.charAt(0) == '\uFEFF') {
+                        line = line.substring(1);
+                    }
+                    isFirstLine = false;
+                }
+
                 line = line.trim();
                 // 跳过空行和注释行
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue;
                 }
-                
+
                 // 解析格式: ID:名称
                 String[] parts = line.split(":", 2);
                 if (parts.length == 2) {
