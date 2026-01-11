@@ -707,8 +707,8 @@
         <!-- 玩家指令广场区域 -->
         <div id="community-section" class="section">
             <div class="sub-menu">
-                <button class="sub-btn active" onclick="showCommunityType('latest')">最新指令</button>
-                <button class="sub-btn" onclick="showCommunityType('popular')">热门指令</button>
+                <button class="sub-btn active" onclick="showCommunityType('all')">指令广场</button>
+                <button class="sub-btn" onclick="showCommunityType('scene')">场景</button>
                 <button class="sub-btn" onclick="showCommunityType('upload')">上传指令</button>
             </div>
 
@@ -767,6 +767,7 @@
                         <option value="weapon">武器</option>
                         <option value="avatar">角色</option>
                         <option value="quest">任务</option>
+                        <option value="scene">场景</option>
                         <option value="other">其他</option>
                     </select>
                 </div>
@@ -861,11 +862,16 @@
         function showSection(section) {
             document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            
+
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(section + '-section').classList.add('active');
-            
+
             document.getElementById('result-box').classList.remove('show');
+
+            // 如果切换到玩家指令广场，自动加载指令列表
+            if (section === 'community') {
+                showCommunityType('all'); // 默认显示所有指令
+            }
         }
 
         // 显示物品类型（优化：使用缓存，避免重复加载）
@@ -1424,8 +1430,16 @@
             listDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div>加载中...</div></div>';
 
             try {
-                const sort = type === 'popular' ? 'popular' : 'time';
-                const response = await fetch(`/api/commands/approved?sort=${sort}`);
+                let url = '/api/commands/approved?sort=time';
+
+                // 根据类型设置不同的参数
+                if (type === 'scene') {
+                    url = '/api/commands/approved?category=scene&sort=time';
+                } else if (type === 'all') {
+                    url = '/api/commands/approved?sort=time';
+                }
+
+                const response = await fetch(url);
                 const commands = await response.json();
 
                 if (commands.length === 0) {
@@ -1447,6 +1461,7 @@
                 'weapon': '武器',
                 'avatar': '角色',
                 'quest': '任务',
+                'scene': '场景',
                 'other': '其他'
             };
 

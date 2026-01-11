@@ -117,13 +117,17 @@ public class PlayerCommandService {
     /**
      * 审核通过
      */
-    public PlayerCommand approveCommand(String id, String reviewNote) {
+    public PlayerCommand approveCommand(String id, String reviewNote, String category) {
         Optional<PlayerCommand> optional = repository.findById(id);
         if (optional.isPresent()) {
             PlayerCommand command = optional.get();
             command.setReviewStatus("APPROVED");
             command.setReviewNote(reviewNote);
             command.setReviewTime(LocalDateTime.now());
+            // 如果提供了分类，更新分类
+            if (category != null && !category.isEmpty()) {
+                command.setCategory(category);
+            }
             return repository.save(command);
         }
         return null;
@@ -132,13 +136,17 @@ public class PlayerCommandService {
     /**
      * 审核拒绝
      */
-    public PlayerCommand rejectCommand(String id, String reviewNote) {
+    public PlayerCommand rejectCommand(String id, String reviewNote, String category) {
         Optional<PlayerCommand> optional = repository.findById(id);
         if (optional.isPresent()) {
             PlayerCommand command = optional.get();
             command.setReviewStatus("REJECTED");
             command.setReviewNote(reviewNote);
             command.setReviewTime(LocalDateTime.now());
+            // 如果提供了分类，更新分类
+            if (category != null && !category.isEmpty()) {
+                command.setCategory(category);
+            }
             return repository.save(command);
         }
         return null;

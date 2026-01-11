@@ -96,6 +96,11 @@ public class CommandProcessor {
 
         String cmdName = parts[0].toLowerCase();
 
+        // 移除指令名开头的斜杠（支持 /tp 和 tp 两种格式）
+        if (cmdName.startsWith("/")) {
+            cmdName = cmdName.substring(1);
+        }
+
         // 检查是否是不需要UID的指令
         if (NO_UID_COMMANDS.contains(cmdName)) {
             return command;

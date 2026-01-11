@@ -363,6 +363,17 @@
             </div>
             <div class="modal-body">
                 <div class="modal-field">
+                    <label>指令分类：</label>
+                    <select id="review-category" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                        <option value="item">物品</option>
+                        <option value="weapon">武器</option>
+                        <option value="avatar">角色</option>
+                        <option value="quest">任务</option>
+                        <option value="scene">场景</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="modal-field">
                     <label>审核备注（可选）：</label>
                     <textarea id="review-note" rows="4" placeholder="请输入审核备注..."></textarea>
                 </div>
@@ -459,8 +470,8 @@
                                     <td>${formatDate(cmd.uploadTime)}</td>
                                     <td>
                                         <button class="action-btn view-btn" onclick="viewCommand('${cmd.id}')">查看</button>
-                                        <button class="action-btn approve-btn" onclick="openReview('${cmd.id}', 'approve')">通过</button>
-                                        <button class="action-btn reject-btn" onclick="openReview('${cmd.id}', 'reject')">拒绝</button>
+                                        <button class="action-btn approve-btn" onclick="openReview('${cmd.id}', 'approve', '${cmd.category}')">通过</button>
+                                        <button class="action-btn reject-btn" onclick="openReview('${cmd.id}', 'reject', '${cmd.category}')">拒绝</button>
                                         <button class="action-btn delete-btn" onclick="deleteCommand('${cmd.id}')">删除</button>
                                     </td>
                                 </tr>
@@ -595,12 +606,18 @@
         }
 
         // 打开审核对话框
-        function openReview(id, action) {
+        function openReview(id, action, category) {
             currentReviewId = id;
             currentReviewAction = action;
 
             document.getElementById('review-title').textContent = action === 'approve' ? '通过审核' : '拒绝审核';
             document.getElementById('review-note').value = '';
+
+            // 设置分类选择器的值
+            if (category) {
+                document.getElementById('review-category').value = category;
+            }
+
             document.getElementById('review-modal').classList.add('active');
         }
 
@@ -609,6 +626,7 @@
             if (!currentReviewId || !currentReviewAction) return;
 
             const reviewNote = document.getElementById('review-note').value.trim();
+            const category = document.getElementById('review-category').value;
 
             try {
                 const endpoint = currentReviewAction === 'approve' ? 'approve' : 'reject';
@@ -617,7 +635,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ reviewNote })
+                    body: JSON.stringify({ reviewNote, category })
                 });
 
                 const result = await response.json();
@@ -687,6 +705,7 @@
                 'weapon': '武器',
                 'avatar': '角色',
                 'quest': '任务',
+                'scene': '场景',
                 'other': '其他'
             };
             return names[category] || category;
