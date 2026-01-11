@@ -65,10 +65,10 @@ public class VerificationService {
             String consoleToken = ConfigLoader.getConfig().getGrasscutter().getConsoleToken();
 
             // 构建发送邮件的指令 - 使用sendmail指令
-            // Grasscutter sendmail格式: sendmail <player> <title> <content> <sender> [itemId:count,itemId:count,...]
-            // 或使用give命令的邮件附件: sendmail all "title" "content" 0 201:1
+            // Grasscutter sendmail格式可能是: sendmail <player> <title> <content> [sender] [itemId:count]
+            // 尝试简化格式，不使用引号
             String mailCommand = String.format(
-                "sendmail %s \"身份验证\" \"您的验证码是: %s (有效期5分钟)\" 0",
+                "sendmail %s 验证码 您的验证码是%s有效期5分钟",
                 uid, code
             );
 
