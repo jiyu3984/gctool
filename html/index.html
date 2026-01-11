@@ -709,6 +709,7 @@
             <div class="sub-menu">
                 <button class="sub-btn active" onclick="showCommunityType('all')">指令广场</button>
                 <button class="sub-btn" onclick="showCommunityType('scene')">场景</button>
+                <button class="sub-btn" onclick="showCommunityType('avatar')">角色</button>
                 <button class="sub-btn" onclick="showCommunityType('upload')">上传指令</button>
             </div>
 
@@ -1435,8 +1436,11 @@
                 // 根据类型设置不同的参数
                 if (type === 'scene') {
                     url = '/api/commands/approved?category=scene&sort=time';
+                } else if (type === 'avatar') {
+                    url = '/api/commands/approved?category=avatar&sort=time';
                 } else if (type === 'all') {
-                    url = '/api/commands/approved?sort=time';
+                    // 指令广场显示"其他"分类的指令
+                    url = '/api/commands/approved?category=other&sort=time';
                 }
 
                 const response = await fetch(url);
