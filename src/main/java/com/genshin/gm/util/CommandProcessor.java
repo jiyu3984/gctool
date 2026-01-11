@@ -64,11 +64,21 @@ public class CommandProcessor {
             return command;
         }
 
+        if (uid == null || uid.trim().isEmpty()) {
+            throw new IllegalArgumentException("UID不能为空");
+        }
+
         command = command.trim();
+        uid = uid.trim();
 
         // 如果已经包含@UID占位符，直接替换
-        if (command.contains("@UID") || command.contains("@ ")) {
-            return command.replace("@UID", "@" + uid).replace("@ ", "@" + uid + " ");
+        if (command.contains("@UID")) {
+            return command.replace("@UID", "@" + uid);
+        }
+
+        // 如果包含 "@ " (@ + 空格)，替换为 @UID + 空格
+        if (command.contains("@ ")) {
+            return command.replace("@ ", "@" + uid + " ");
         }
 
         // 如果已经包含@但后面跟着数字（说明已经有UID了），不处理
@@ -107,11 +117,6 @@ public class CommandProcessor {
                 }
                 return result.toString();
             }
-        }
-
-        // 特殊处理：如果指令包含单独的@符号，替换为@UID
-        if (command.contains(" @ ")) {
-            return command.replace(" @ ", " @" + uid + " ");
         }
 
         // 其他情况：尝试在指令名后添加@UID（保守策略）

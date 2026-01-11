@@ -181,7 +181,7 @@ public class PlayerCommandController {
             // 使用智能处理器处理指令，自动添加UID
             String finalCommand = CommandProcessor.processCommand(command.getCommand(), uid);
 
-            logger.info("执行指令 - 原始: {}, 处理后: {}", command.getCommand(), finalCommand);
+            logger.info("执行指令 - UID: {}, 原始: {}, 处理后: {}", uid, command.getCommand(), finalCommand);
 
             // 执行指令
             OpenCommandResponse result = grasscutterService.executeConsoleCommand(
@@ -190,10 +190,23 @@ public class PlayerCommandController {
                     finalCommand
             );
 
+            logger.info("OpenCommand响应 - retcode: {}, message: {}, data: {}",
+                    result.getRetcode(), result.getMessage(), result.getData());
+
             if (result.getRetcode() == 200) {
-                response.put("success", true);
-                response.put("message", "指令执行成功");
-                response.put("data", result.getData());
+                String resultData = result.getData() != null ? result.getData().toString() : "";
+
+                // 检查返回结果是否包含错误提示（比如"用法："）
+                if (resultData.contains("用法：") || resultData.contains("此命令需要")) {
+                    response.put("success", false);
+                    response.put("message", "指令格式错误");
+                    response.put("data", resultData);
+                    response.put("debug", "处理后的指令: " + finalCommand);
+                } else {
+                    response.put("success", true);
+                    response.put("message", "指令执行成功");
+                    response.put("data", resultData);
+                }
             } else {
                 response.put("success", false);
                 response.put("message", "指令执行失败: " + result.getMessage());
