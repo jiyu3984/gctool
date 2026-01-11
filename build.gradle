@@ -19,6 +19,11 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // 明确添加Logback依赖
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
+    implementation 'ch.qos.logback:logback-core:1.2.11'
+
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
