@@ -8,6 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.awt.Desktop;
 import java.net.URI;
@@ -16,6 +17,7 @@ import java.net.URI;
  * 原神 GM 指令生成系统 - 主启动类
  */
 @SpringBootApplication
+@EnableScheduling
 public class GenshinGMApplication {
     private static final Logger logger = LoggerFactory.getLogger(GenshinGMApplication.class);
 
