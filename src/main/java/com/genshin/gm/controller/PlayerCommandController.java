@@ -6,6 +6,7 @@ import com.genshin.gm.model.OpenCommandResponse;
 import com.genshin.gm.model.PlayerCommand;
 import com.genshin.gm.service.GrasscutterService;
 import com.genshin.gm.service.PlayerCommandService;
+import com.genshin.gm.service.VerificationService;
 import com.genshin.gm.util.CommandProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,9 @@ public class PlayerCommandController {
 
     @Autowired
     private GrasscutterService grasscutterService;
+
+    @Autowired
+    private VerificationService verificationService;
 
     /**
      * 提交新指令
@@ -152,6 +156,14 @@ public class PlayerCommandController {
             if (uid == null || uid.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "请提供UID");
+                return ResponseEntity.ok(response);
+            }
+
+            // 检查验证状态
+            if (!verificationService.isVerified(uid)) {
+                response.put("success", false);
+                response.put("message", "请先验证您的UID");
+                response.put("needVerification", true);
                 return ResponseEntity.ok(response);
             }
 

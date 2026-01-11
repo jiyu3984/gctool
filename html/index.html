@@ -719,6 +719,19 @@
                 <input type="number" id="player-uid" placeholder="请输入您的游戏UID" oninput="savePlayerUid()">
             </div>
 
+            <!-- 验证码区域 -->
+            <div class="form-group" id="verification-area">
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label>验证码（5分钟有效期）：</label>
+                        <input type="text" id="verification-code" placeholder="请输入6位验证码" maxlength="6">
+                    </div>
+                    <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="height: 48px; margin: 0;">发送验证码</button>
+                    <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="height: 48px; margin: 0; background: #4caf50;">验证</button>
+                </div>
+                <div id="verification-status" style="margin-top: 10px; padding: 10px; border-radius: 8px; display: none;"></div>
+            </div>
+
             <!-- 指令列表 -->
             <div id="community-list" class="community-list">
                 <!-- 动态生成指令卡片 -->
@@ -1565,6 +1578,10 @@
             const savedUid = localStorage.getItem('playerUid');
             if (savedUid) {
                 document.getElementById('player-uid').value = savedUid;
+                // 检查验证状态
+                setTimeout(() => {
+                    checkVerificationStatus();
+                }, 500);
             }
         }
 
@@ -1584,6 +1601,194 @@
                 return null;
             }
             return uid;
+        }
+
+        // 发送验证码
+        async function sendVerificationCode() {
+            const uid = getPlayerUid();
+            if (!uid) return;
+
+            const sendBtn = document.getElementById('send-code-btn');
+            const statusDiv = document.getElementById('verification-status');
+
+            // 禁用按钮，防止重复点击
+            sendBtn.disabled = true;
+            sendBtn.textContent = '发送中...';
+
+            try {
+                const response = await fetch('/api/verification/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = '#e8f5e9';
+                    statusDiv.style.color = '#2e7d32';
+                    statusDiv.textContent = '✅ ' + result.message;
+
+                    // 开始倒计时（60秒）
+                    let countdown = 60;
+                    const countdownInterval = setInterval(() => {
+                        sendBtn.textContent = `${countdown}秒后重试`;
+                        countdown--;
+                        if (countdown < 0) {
+                            clearInterval(countdownInterval);
+                            sendBtn.disabled = false;
+                            sendBtn.textContent = '发送验证码';
+                        }
+                    }, 1000);
+                } else {
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = '#ffebee';
+                    statusDiv.style.color = '#c62828';
+                    statusDiv.textContent = '❌ ' + result.message;
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = '发送验证码';
+                }
+            } catch (error) {
+                console.error('发送验证码失败:', error);
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = '#ffebee';
+                statusDiv.style.color = '#c62828';
+                statusDiv.textContent = '❌ 发送失败，请重试';
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送验证码';
+            }
+        }
+
+        // 验证验证码
+        async function verifyCode() {
+            const uid = getPlayerUid();
+            if (!uid) return;
+
+            const code = document.getElementById('verification-code').value.trim();
+            if (!code) {
+                alert('请输入验证码！');
+                return;
+            }
+
+            const verifyBtn = document.getElementById('verify-code-btn');
+            const statusDiv = document.getElementById('verification-status');
+
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = '验证中...';
+
+            try {
+                const response = await fetch('/api/verification/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid, code })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = '#e8f5e9';
+                    statusDiv.style.color = '#2e7d32';
+                    statusDiv.textContent = '✅ 验证成功！现在可以使用远程指令了';
+
+                    // 保存验证状态到localStorage
+                    const verificationData = {
+                        uid: uid,
+                        verified: true,
+                        expiryTime: result.expiryTime
+                    };
+                    localStorage.setItem('verification', JSON.stringify(verificationData));
+
+                    // 禁用输入框和按钮
+                    document.getElementById('verification-code').disabled = true;
+                    document.getElementById('send-code-btn').disabled = true;
+                    verifyBtn.disabled = true;
+                    verifyBtn.textContent = '已验证';
+                } else {
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = '#ffebee';
+                    statusDiv.style.color = '#c62828';
+                    statusDiv.textContent = '❌ ' + result.message;
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = '验证';
+                }
+            } catch (error) {
+                console.error('验证失败:', error);
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = '#ffebee';
+                statusDiv.style.color = '#c62828';
+                statusDiv.textContent = '❌ 验证失败，请重试';
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = '验证';
+            }
+        }
+
+        // 检查验证状态
+        async function checkVerificationStatus() {
+            const uid = getPlayerUid();
+            if (!uid) return false;
+
+            // 先检查localStorage
+            const saved = localStorage.getItem('verification');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.uid === uid && data.verified) {
+                    const expiryTime = new Date(data.expiryTime);
+                    if (new Date() < expiryTime) {
+                        // 验证仍然有效
+                        updateVerificationUI(true);
+                        return true;
+                    } else {
+                        // 验证已过期
+                        localStorage.removeItem('verification');
+                    }
+                }
+            }
+
+            // 向服务器确认
+            try {
+                const response = await fetch(`/api/verification/status?uid=${uid}`);
+                const result = await response.json();
+
+                if (result.verified) {
+                    updateVerificationUI(true);
+                    return true;
+                } else {
+                    updateVerificationUI(false);
+                    return false;
+                }
+            } catch (error) {
+                console.error('检查验证状态失败:', error);
+                return false;
+            }
+        }
+
+        // 更新验证UI状态
+        function updateVerificationUI(verified) {
+            const statusDiv = document.getElementById('verification-status');
+            const codeInput = document.getElementById('verification-code');
+            const sendBtn = document.getElementById('send-code-btn');
+            const verifyBtn = document.getElementById('verify-code-btn');
+
+            if (verified) {
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = '#e8f5e9';
+                statusDiv.style.color = '#2e7d32';
+                statusDiv.textContent = '✅ 已验证，可以使用远程指令';
+                codeInput.disabled = true;
+                sendBtn.disabled = true;
+                verifyBtn.disabled = true;
+                verifyBtn.textContent = '已验证';
+            } else {
+                statusDiv.style.display = 'none';
+                codeInput.disabled = false;
+                codeInput.value = '';
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送验证码';
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = '验证';
+            }
         }
 
         // 点赞指令（需要UID）
@@ -1618,6 +1823,13 @@
             const uid = getPlayerUid();
             if (!uid) return;
 
+            // 检查验证状态
+            const verified = await checkVerificationStatus();
+            if (!verified) {
+                alert('⚠️ 请先验证您的UID！\n\n1. 点击"发送验证码"按钮，验证码将发送到您的游戏内邮箱\n2. 在游戏中查收邮件获取验证码\n3. 输入验证码并点击"验证"按钮');
+                return;
+            }
+
             if (!confirm('确认要将此指令发送到您的游戏账户吗？\n\nUID: ' + uid + '\n指令: ' + command)) {
                 return;
             }
@@ -1634,7 +1846,14 @@
                 if (result.success) {
                     alert('✅ 指令执行成功！\n\n' + (result.data || '指令已发送到您的账户'));
                 } else {
-                    alert('❌ ' + result.message);
+                    if (result.needVerification) {
+                        alert('⚠️ ' + result.message + '\n\n验证码可能已过期（有效期5分钟），请重新验证：\n1. 点击"发送验证码"按钮\n2. 在游戏中查收邮件\n3. 输入验证码并验证');
+                        // 清除本地验证状态
+                        localStorage.removeItem('verification');
+                        updateVerificationUI(false);
+                    } else {
+                        alert('❌ ' + result.message);
+                    }
                 }
             } catch (error) {
                 console.error('执行指令失败:', error);
