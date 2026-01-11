@@ -159,10 +159,19 @@ public class PlayerCommandController {
                 return ResponseEntity.ok(response);
             }
 
-            // 检查验证状态
+            // 检查验证状态并获取token
             if (!verificationService.isVerified(uid)) {
                 response.put("success", false);
                 response.put("message", "请先验证您的UID");
+                response.put("needVerification", true);
+                return ResponseEntity.ok(response);
+            }
+
+            // 获取验证后的token
+            String token = verificationService.getVerifiedToken(uid);
+            if (token == null) {
+                response.put("success", false);
+                response.put("message", "验证已过期，请重新验证");
                 response.put("needVerification", true);
                 return ResponseEntity.ok(response);
             }
@@ -193,12 +202,12 @@ public class PlayerCommandController {
             // 使用智能处理器处理指令，自动添加UID
             String finalCommand = CommandProcessor.processCommand(command.getCommand(), uid);
 
-            logger.info("执行指令 - UID: {}, 原始: {}, 处理后: {}", uid, command.getCommand(), finalCommand);
+            logger.info("执行指令 - UID: {}, 原始: {}, 处理后: {}, token: {}", uid, command.getCommand(), finalCommand, token);
 
-            // 执行指令
-            OpenCommandResponse result = grasscutterService.executeConsoleCommand(
+            // 使用验证后的token执行指令（玩家模式）
+            OpenCommandResponse result = grasscutterService.executeCommand(
                     gcConfig.getFullUrl(),
-                    gcConfig.getConsoleToken(),
+                    token,
                     finalCommand
             );
 

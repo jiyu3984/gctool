@@ -5,20 +5,21 @@ import java.time.LocalDateTime;
 /**
  * 验证码实体类
  * 用于存储UID验证码及其过期时间
+ * 使用OpenCommand插件的验证系统
  */
 public class VerificationCode {
 
     private String uid;
-    private String code;
+    private String token;  // OpenCommand返回的临时token
     private LocalDateTime expiryTime;
     private boolean verified;
 
     public VerificationCode() {
     }
 
-    public VerificationCode(String uid, String code, LocalDateTime expiryTime) {
+    public VerificationCode(String uid, String token, LocalDateTime expiryTime) {
         this.uid = uid;
-        this.code = code;
+        this.token = token;
         this.expiryTime = expiryTime;
         this.verified = false;
     }
@@ -47,12 +48,12 @@ public class VerificationCode {
         this.uid = uid;
     }
 
-    public String getCode() {
-        return code;
+    public String getToken() {
+        return token;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public LocalDateTime getExpiryTime() {

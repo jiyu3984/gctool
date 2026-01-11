@@ -658,8 +658,8 @@
             </div>
 
             <div class="form-group" id="verification-area" style="margin-bottom: 0;">
-                <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（5分钟有效期）：</label>
-                <input type="text" id="verification-code" placeholder="请输入6位验证码" maxlength="6" style="width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; letter-spacing: 3px; text-align: center; font-weight: 600; margin-bottom: 10px;">
+                <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（1分钟有效期）：</label>
+                <input type="text" id="verification-code" placeholder="请输入4位验证码" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 22px; letter-spacing: 8px; text-align: center; font-weight: 600; margin-bottom: 10px;">
                 <div style="display: flex; gap: 10px;">
                     <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="flex: 1; padding: 14px; margin: 0; font-size: 16px;">发送验证码</button>
                     <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="flex: 1; padding: 14px; margin: 0; background: #4caf50; font-size: 16px;">验证</button>
@@ -1656,7 +1656,12 @@
 
             const code = document.getElementById('verification-code').value.trim();
             if (!code) {
-                alert('请输入验证码！');
+                alert('请输入4位验证码！');
+                return;
+            }
+
+            if (code.length !== 4 || !/^\d+$/.test(code)) {
+                alert('请输入正确的4位数字验证码！');
                 return;
             }
 
@@ -1815,7 +1820,7 @@
             // 检查验证状态
             const verified = await checkVerificationStatus();
             if (!verified) {
-                alert('⚠️ 请先验证您的UID！\n\n1. 点击"发送验证码"按钮，验证码将发送到您的游戏内邮箱\n2. 在游戏中查收邮件获取验证码\n3. 输入验证码并点击"验证"按钮');
+                alert('⚠️ 请先验证您的UID！\n\n1. 确保已登录游戏（必须在线）\n2. 点击"发送验证码"按钮\n3. 在游戏中查看弹出的4位验证码\n4. 输入验证码并点击"验证"按钮');
                 return;
             }
 
@@ -1836,7 +1841,7 @@
                     alert('✅ 指令执行成功！\n\n' + (result.data || '指令已发送到您的账户'));
                 } else {
                     if (result.needVerification) {
-                        alert('⚠️ ' + result.message + '\n\n验证码可能已过期（有效期5分钟），请重新验证：\n1. 点击"发送验证码"按钮\n2. 在游戏中查收邮件\n3. 输入验证码并验证');
+                        alert('⚠️ ' + result.message + '\n\n验证码可能已过期（有效期1分钟），请重新验证：\n1. 确保游戏在线\n2. 点击"发送验证码"按钮\n3. 在游戏中查看弹出的验证码\n4. 输入验证码并验证');
                         // 清除本地验证状态
                         localStorage.removeItem('verification');
                         updateVerificationUI(false);
