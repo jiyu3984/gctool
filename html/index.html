@@ -650,6 +650,24 @@
             <button class="menu-btn" onclick="showSection('community')">玩家指令广场</button>
         </div>
 
+        <!-- 全局UID和验证码区域 -->
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 2px solid #e0e0e0;">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-weight: 600; color: #333;">您的UID（用于点赞和远程执行指令）：</label>
+                <input type="number" id="player-uid" placeholder="请输入您的游戏UID" oninput="savePlayerUid()" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
+            </div>
+
+            <div class="form-group" id="verification-area" style="margin-bottom: 0;">
+                <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（5分钟有效期）：</label>
+                <input type="text" id="verification-code" placeholder="请输入6位验证码" maxlength="6" style="width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; letter-spacing: 3px; text-align: center; font-weight: 600; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="flex: 1; padding: 14px; margin: 0; font-size: 16px;">发送验证码</button>
+                    <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="flex: 1; padding: 14px; margin: 0; background: #4caf50; font-size: 16px;">验证</button>
+                </div>
+                <div id="verification-status" style="margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 14px;"></div>
+            </div>
+        </div>
+
         <!-- 物品生成区域 -->
         <div id="items-section" class="section active">
             <div class="sub-menu">
@@ -671,11 +689,6 @@
                 <input type="number" id="quantity" value="1" min="1" max="9999">
             </div>
 
-            <div class="form-group">
-                <label>目标UID（可选）：</label>
-                <input type="number" id="target-uid" placeholder="不填则为@，填写则为 @UID">
-            </div>
-
             <button class="generate-btn" onclick="generateGiveCommand()">生成指令</button>
             <button class="execute-btn" id="execute-item-btn" onclick="executeGeneratedCommand('items')" disabled>向服务器执行指令</button>
         </div>
@@ -695,11 +708,6 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>目标UID（可选）：</label>
-                <input type="number" id="quest-target-uid" placeholder="不填则为@，填写则为 @UID">
-            </div>
-
             <button class="generate-btn" onclick="generateQuestCommand()">生成指令</button>
             <button class="execute-btn" id="execute-quest-btn" onclick="executeGeneratedCommand('quest')" disabled>向服务器执行指令</button>
         </div>
@@ -711,25 +719,6 @@
                 <button class="sub-btn" onclick="showCommunityType('scene')">场景</button>
                 <button class="sub-btn" onclick="showCommunityType('avatar')">角色</button>
                 <button class="sub-btn" onclick="showCommunityType('upload')">上传指令</button>
-            </div>
-
-            <!-- UID输入框 -->
-            <div class="form-group" style="margin-top: 20px;">
-                <label>您的UID（用于点赞和使用指令）：</label>
-                <input type="number" id="player-uid" placeholder="请输入您的游戏UID" oninput="savePlayerUid()">
-            </div>
-
-            <!-- 验证码区域 -->
-            <div class="form-group" id="verification-area">
-                <div style="display: flex; gap: 10px; align-items: flex-end;">
-                    <div style="flex: 1;">
-                        <label>验证码（5分钟有效期）：</label>
-                        <input type="text" id="verification-code" placeholder="请输入6位验证码" maxlength="6">
-                    </div>
-                    <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="height: 48px; margin: 0;">发送验证码</button>
-                    <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="height: 48px; margin: 0; background: #4caf50;">验证</button>
-                </div>
-                <div id="verification-status" style="margin-top: 10px; padding: 10px; border-radius: 8px; display: none;"></div>
             </div>
 
             <!-- 指令列表 -->
@@ -1180,7 +1169,7 @@
         async function generateGiveCommand() {
             const itemId = selectedItemId;
             const quantity = parseInt(document.getElementById('quantity').value);
-            const targetUid = document.getElementById('target-uid').value;
+            const globalUid = document.getElementById('player-uid').value.trim();
 
             if (!itemId) {
                 alert('请选择物品！');
@@ -1202,9 +1191,9 @@
                 const result = await response.json();
                 let command = result.command;
 
-                // 添加UID
-                if (targetUid) {
-                    command += ' @' + targetUid;
+                // 使用全局UID
+                if (globalUid) {
+                    command += ' @' + globalUid;
                 } else {
                     command += ' @';
                 }
@@ -1223,7 +1212,7 @@
         // 生成任务指令
         async function generateQuestCommand() {
             const questId = selectedQuestId;
-            const targetUid = document.getElementById('quest-target-uid').value;
+            const globalUid = document.getElementById('player-uid').value.trim();
 
             if (!questId) {
                 alert('请选择任务！');
@@ -1242,9 +1231,9 @@
                 const result = await response.json();
                 let command = result.command;
 
-                // 添加UID
-                if (targetUid) {
-                    command += ' @' + targetUid;
+                // 使用全局UID
+                if (globalUid) {
+                    command += ' @' + globalUid;
                 } else {
                     command += ' @';
                 }

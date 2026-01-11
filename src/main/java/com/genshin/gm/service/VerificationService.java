@@ -64,9 +64,11 @@ public class VerificationService {
             String serverUrl = ConfigLoader.getConfig().getGrasscutter().getFullUrl();
             String consoleToken = ConfigLoader.getConfig().getGrasscutter().getConsoleToken();
 
-            // 构建发送邮件的指令
+            // 构建发送邮件的指令 - 使用sendmail指令
+            // Grasscutter sendmail格式: sendmail <player> <title> <content> <sender> [itemId:count,itemId:count,...]
+            // 或使用give命令的邮件附件: sendmail all "title" "content" 0 201:1
             String mailCommand = String.format(
-                "sendmail %s \"身份验证\" \"您的验证码是：%s，有效期5分钟。如非本人操作，请忽略此邮件。\" 201 1",
+                "sendmail %s \"身份验证\" \"您的验证码是: %s (有效期5分钟)\" 0",
                 uid, code
             );
 
@@ -78,6 +80,12 @@ public class VerificationService {
                 mailCommand
             );
 
+            logger.info("发送邮件响应 - retcode: {}, message: {}, data: {}",
+                response != null ? response.getRetcode() : "null",
+                response != null ? response.getMessage() : "null",
+                response != null ? response.getData() : "null"
+            );
+
             if (response != null && response.getRetcode() == 200) {
                 result.put("success", true);
                 result.put("message", "验证码已发送到游戏内邮箱，请查收");
@@ -87,6 +95,7 @@ public class VerificationService {
                 verificationCodes.remove(uid);
                 result.put("success", false);
                 result.put("message", "发送验证码失败: " + (response != null ? response.getMessage() : "未知错误"));
+                logger.error("发送邮件失败 - response: {}", response);
             }
 
         } catch (Exception e) {
