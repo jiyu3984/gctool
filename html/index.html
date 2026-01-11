@@ -689,11 +689,6 @@
                 <input type="number" id="quantity" value="1" min="1" max="9999">
             </div>
 
-            <div class="form-group">
-                <label>目标UID（可选）：</label>
-                <input type="number" id="target-uid" placeholder="不填则为@，填写则为 @UID">
-            </div>
-
             <button class="generate-btn" onclick="generateGiveCommand()">生成指令</button>
             <button class="execute-btn" id="execute-item-btn" onclick="executeGeneratedCommand('items')" disabled>向服务器执行指令</button>
         </div>
@@ -711,11 +706,6 @@
                     <span class="placeholder" id="quest-display">点击选择任务...</span>
                     <span class="arrow">▼</span>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>目标UID（可选）：</label>
-                <input type="number" id="quest-target-uid" placeholder="不填则为@，填写则为 @UID">
             </div>
 
             <button class="generate-btn" onclick="generateQuestCommand()">生成指令</button>
@@ -1179,7 +1169,7 @@
         async function generateGiveCommand() {
             const itemId = selectedItemId;
             const quantity = parseInt(document.getElementById('quantity').value);
-            const targetUid = document.getElementById('target-uid').value;
+            const globalUid = document.getElementById('player-uid').value.trim();
 
             if (!itemId) {
                 alert('请选择物品！');
@@ -1201,9 +1191,9 @@
                 const result = await response.json();
                 let command = result.command;
 
-                // 添加UID
-                if (targetUid) {
-                    command += ' @' + targetUid;
+                // 使用全局UID
+                if (globalUid) {
+                    command += ' @' + globalUid;
                 } else {
                     command += ' @';
                 }
@@ -1222,7 +1212,7 @@
         // 生成任务指令
         async function generateQuestCommand() {
             const questId = selectedQuestId;
-            const targetUid = document.getElementById('quest-target-uid').value;
+            const globalUid = document.getElementById('player-uid').value.trim();
 
             if (!questId) {
                 alert('请选择任务！');
@@ -1241,9 +1231,9 @@
                 const result = await response.json();
                 let command = result.command;
 
-                // 添加UID
-                if (targetUid) {
-                    command += ' @' + targetUid;
+                // 使用全局UID
+                if (globalUid) {
+                    command += ' @' + globalUid;
                 } else {
                     command += ' @';
                 }
@@ -1627,13 +1617,7 @@
                     statusDiv.style.display = 'block';
                     statusDiv.style.background = '#e8f5e9';
                     statusDiv.style.color = '#2e7d32';
-                    let message = '✅ ' + result.message;
-                    // 如果返回了验证码（测试用），显示它
-                    if (result.code) {
-                        message += '\n【测试模式】验证码: ' + result.code;
-                    }
-                    statusDiv.textContent = message;
-                    statusDiv.style.whiteSpace = 'pre-line';
+                    statusDiv.textContent = '✅ ' + result.message;
 
                     // 开始倒计时（60秒）
                     let countdown = 60;
@@ -1648,15 +1632,9 @@
                     }, 1000);
                 } else {
                     statusDiv.style.display = 'block';
-                    statusDiv.style.background = '#fff3cd';
-                    statusDiv.style.color = '#856404';
-                    let message = '⚠️ ' + result.message;
-                    // 如果返回了验证码（测试用），显示它
-                    if (result.code) {
-                        message += '\n【测试模式】验证码: ' + result.code;
-                    }
-                    statusDiv.textContent = message;
-                    statusDiv.style.whiteSpace = 'pre-line';
+                    statusDiv.style.background = '#ffebee';
+                    statusDiv.style.color = '#c62828';
+                    statusDiv.textContent = '❌ ' + result.message;
                     sendBtn.disabled = false;
                     sendBtn.textContent = '发送验证码';
                 }
