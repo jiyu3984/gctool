@@ -1,0 +1,39 @@
+package com.genshin.gm.repository;
+
+import com.genshin.gm.model.PlayerCommand;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+/**
+ * 玩家指令数据访问接口
+ */
+@Repository
+public interface PlayerCommandRepository extends MongoRepository<PlayerCommand, String> {
+
+    /**
+     * 根据审核状态查询指令
+     */
+    List<PlayerCommand> findByReviewStatus(String reviewStatus);
+
+    /**
+     * 根据分类查询已审核通过的指令
+     */
+    List<PlayerCommand> findByCategoryAndReviewStatus(String category, String reviewStatus);
+
+    /**
+     * 根据分类查询已审核通过的指令，并按点赞数降序排序
+     */
+    List<PlayerCommand> findByCategoryAndReviewStatusOrderByLikesDesc(String category, String reviewStatus);
+
+    /**
+     * 查询所有已审核通过的指令，按上传时间降序排序
+     */
+    List<PlayerCommand> findByReviewStatusOrderByUploadTimeDesc(String reviewStatus);
+
+    /**
+     * 查询所有已审核通过的指令，按点赞数降序排序
+     */
+    List<PlayerCommand> findByReviewStatusOrderByLikesDesc(String reviewStatus);
+}

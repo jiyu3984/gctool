@@ -1,13 +1,16 @@
 {
   "frontend": {
-    "host": "localhost",
-    "port": 8080,
-    "autoOpen": true
+    "port": 8080
   },
   "grasscutter": {
-    "serverUrl": "http://127.0.0.1:443",
-    "apiPath": "/opencommand/api",
-    "consoleToken": "",
-    "timeout": 10000
+    "serverUrl": "http://127.0.0.1:1145",
+    "consoleToken": "sh345Hfss34P4Ya99sb4e6MRUEGd5srm95i34hFBf2EMDPutOye"
+  },
+  "mongodb": {
+    "host": "localhost",
+    "port": 27017,
+    "database": "genshin_gm",
+    "username": "",
+    "password": ""
   }
 }

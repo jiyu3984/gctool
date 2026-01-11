@@ -463,6 +463,168 @@
         .panel-footer .cancel-btn:hover {
             background: #d0d0d0;
         }
+
+        /* 玩家指令广场样式 */
+        .community-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .command-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .command-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .command-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .command-card-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .command-card-category {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .command-card-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .command-card-content {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 12px;
+            max-height: 80px;
+            overflow-y: auto;
+            word-break: break-all;
+        }
+
+        .command-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .command-card-info {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .command-card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .command-card-actions button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .like-btn {
+            background: #fff;
+            border: 1px solid #667eea !important;
+            color: #667eea;
+        }
+
+        .like-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .use-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .use-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .upload-form {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .upload-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .upload-form textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .upload-form select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .upload-form select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -485,6 +647,7 @@
         <div class="menu">
             <button class="menu-btn active" onclick="showSection('items')">物品生成</button>
             <button class="menu-btn" onclick="showSection('quest')">任务</button>
+            <button class="menu-btn" onclick="showSection('community')">玩家指令广场</button>
         </div>
 
         <!-- 物品生成区域 -->
@@ -539,6 +702,62 @@
 
             <button class="generate-btn" onclick="generateQuestCommand()">生成指令</button>
             <button class="execute-btn" id="execute-quest-btn" onclick="executeGeneratedCommand('quest')" disabled>向服务器执行指令</button>
+        </div>
+
+        <!-- 玩家指令广场区域 -->
+        <div id="community-section" class="section">
+            <div class="sub-menu">
+                <button class="sub-btn active" onclick="showCommunityType('latest')">最新指令</button>
+                <button class="sub-btn" onclick="showCommunityType('popular')">热门指令</button>
+                <button class="sub-btn" onclick="showCommunityType('upload')">上传指令</button>
+            </div>
+
+            <!-- UID输入框 -->
+            <div class="form-group" style="margin-top: 20px;">
+                <label>您的UID（用于点赞和使用指令）：</label>
+                <input type="number" id="player-uid" placeholder="请输入您的游戏UID" oninput="savePlayerUid()">
+            </div>
+
+            <!-- 指令列表 -->
+            <div id="community-list" class="community-list">
+                <!-- 动态生成指令卡片 -->
+            </div>
+
+            <!-- 上传指令表单 -->
+            <div id="upload-form" class="upload-form" style="display: none;">
+                <div class="form-group">
+                    <label>指令标题：</label>
+                    <input type="text" id="cmd-title" placeholder="请输入指令标题（必填）">
+                </div>
+
+                <div class="form-group">
+                    <label>指令描述：</label>
+                    <textarea id="cmd-description" rows="3" placeholder="请描述这个指令的作用（必填）"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>指令内容：</label>
+                    <textarea id="cmd-command" rows="4" placeholder="请输入完整的指令（必填）"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>分类：</label>
+                    <select id="cmd-category">
+                        <option value="item">物品</option>
+                        <option value="weapon">武器</option>
+                        <option value="avatar">角色</option>
+                        <option value="quest">任务</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>上传者名称（可选）：</label>
+                    <input type="text" id="cmd-uploader" placeholder="请输入您的昵称">
+                </div>
+
+                <button class="generate-btn" onclick="submitPlayerCommand()">提交指令</button>
+            </div>
         </div>
 
         <!-- 结果显示 -->
@@ -615,6 +834,7 @@
             loadQuestData();
             loadGCConfig();
             autoConnectServer();
+            loadPlayerUid(); // 加载保存的UID
         };
 
         // 显示主功能区
@@ -1149,6 +1369,237 @@
             } finally {
                 btn.disabled = false;
                 btn.textContent = '向服务器执行指令';
+            }
+        }
+
+        // ========== 玩家指令广场功能 ==========
+        let currentCommunityType = 'latest';
+
+        // 显示指令广场类型
+        function showCommunityType(type) {
+            currentCommunityType = type;
+
+            // 更新子菜单按钮样式
+            const buttons = document.querySelectorAll('#community-section .sub-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 根据类型显示不同内容
+            const listDiv = document.getElementById('community-list');
+            const formDiv = document.getElementById('upload-form');
+
+            if (type === 'upload') {
+                listDiv.style.display = 'none';
+                formDiv.style.display = 'block';
+            } else {
+                listDiv.style.display = 'grid';
+                formDiv.style.display = 'none';
+                loadCommunityCommands(type);
+            }
+        }
+
+        // 加载玩家指令
+        async function loadCommunityCommands(type) {
+            const listDiv = document.getElementById('community-list');
+            listDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div>加载中...</div></div>';
+
+            try {
+                const sort = type === 'popular' ? 'popular' : 'time';
+                const response = await fetch(`/api/commands/approved?sort=${sort}`);
+                const commands = await response.json();
+
+                if (commands.length === 0) {
+                    listDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div>暂无指令</div></div>';
+                    return;
+                }
+
+                listDiv.innerHTML = commands.map(cmd => createCommandCard(cmd)).join('');
+            } catch (error) {
+                console.error('加载指令失败:', error);
+                listDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div><div>加载失败</div></div>';
+            }
+        }
+
+        // 创建指令卡片
+        function createCommandCard(cmd) {
+            const categoryNames = {
+                'item': '物品',
+                'weapon': '武器',
+                'avatar': '角色',
+                'quest': '任务',
+                'other': '其他'
+            };
+
+            const categoryName = categoryNames[cmd.category] || cmd.category;
+            const uploaderName = cmd.uploaderName || '匿名';
+
+            return `
+                <div class="command-card">
+                    <div class="command-card-header">
+                        <div class="command-card-title">${escapeHtml(cmd.title)}</div>
+                        <div class="command-card-category">${categoryName}</div>
+                    </div>
+                    <div class="command-card-description">${escapeHtml(cmd.description)}</div>
+                    <div class="command-card-content">${escapeHtml(cmd.command)}</div>
+                    <div class="command-card-footer">
+                        <div class="command-card-info">
+                            <span>👤 ${escapeHtml(uploaderName)}</span>
+                            <span>👁 ${cmd.views}</span>
+                            <span>❤️ ${cmd.likes}</span>
+                        </div>
+                        <div class="command-card-actions">
+                            <button class="like-btn" onclick="likePlayerCommand('${cmd.id}')">点赞</button>
+                            <button class="use-btn" onclick="usePlayerCommand('${cmd.id}', '${escapeHtml(cmd.command)}')">使用</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 提交玩家指令
+        async function submitPlayerCommand() {
+            const title = document.getElementById('cmd-title').value.trim();
+            const description = document.getElementById('cmd-description').value.trim();
+            const command = document.getElementById('cmd-command').value.trim();
+            const category = document.getElementById('cmd-category').value;
+            const uploaderName = document.getElementById('cmd-uploader').value.trim();
+
+            if (!title) {
+                alert('请输入指令标题！');
+                return;
+            }
+
+            if (!description) {
+                alert('请输入指令描述！');
+                return;
+            }
+
+            if (!command) {
+                alert('请输入指令内容！');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/commands/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        command,
+                        category,
+                        uploaderName: uploaderName || '匿名'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ 指令提交成功！\n\n您的指令已提交审核，审核通过后将在指令广场显示。');
+                    // 清空表单
+                    document.getElementById('cmd-title').value = '';
+                    document.getElementById('cmd-description').value = '';
+                    document.getElementById('cmd-command').value = '';
+                    document.getElementById('cmd-uploader').value = '';
+                } else {
+                    alert('❌ 提交失败: ' + result.message);
+                }
+            } catch (error) {
+                alert('提交失败: ' + error.message);
+                console.error('提交指令失败:', error);
+            }
+        }
+
+        // ========== UID管理 ==========
+        // 加载保存的UID
+        function loadPlayerUid() {
+            const savedUid = localStorage.getItem('playerUid');
+            if (savedUid) {
+                document.getElementById('player-uid').value = savedUid;
+            }
+        }
+
+        // 保存UID到localStorage
+        function savePlayerUid() {
+            const uid = document.getElementById('player-uid').value.trim();
+            if (uid) {
+                localStorage.setItem('playerUid', uid);
+            }
+        }
+
+        // 获取当前UID
+        function getPlayerUid() {
+            const uid = document.getElementById('player-uid').value.trim();
+            if (!uid) {
+                alert('请先在上方输入您的游戏UID！');
+                return null;
+            }
+            return uid;
+        }
+
+        // 点赞指令（需要UID）
+        async function likePlayerCommand(id) {
+            const uid = getPlayerUid();
+            if (!uid) return;
+
+            try {
+                const response = await fetch(`/api/commands/${id}/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ ' + result.message);
+                    // 重新加载列表
+                    loadCommunityCommands(currentCommunityType);
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            } catch (error) {
+                console.error('点赞失败:', error);
+                alert('点赞失败，请稍后重试');
+            }
+        }
+
+        // 使用指令（直接发送到玩家账户）
+        async function usePlayerCommand(id, command) {
+            const uid = getPlayerUid();
+            if (!uid) return;
+
+            if (!confirm('确认要将此指令发送到您的游戏账户吗？\n\nUID: ' + uid + '\n指令: ' + command)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/commands/${id}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ 指令执行成功！\n\n' + (result.data || '指令已发送到您的账户'));
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            } catch (error) {
+                console.error('执行指令失败:', error);
+                alert('执行失败，请检查服务器连接');
             }
         }
     </script>
