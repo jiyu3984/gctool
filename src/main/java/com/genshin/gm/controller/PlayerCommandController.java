@@ -1,6 +1,10 @@
 package com.genshin.gm.controller;
 
+import com.genshin.gm.config.AppConfig;
+import com.genshin.gm.config.ConfigLoader;
+import com.genshin.gm.model.OpenCommandResponse;
 import com.genshin.gm.model.PlayerCommand;
+import com.genshin.gm.service.GrasscutterService;
 import com.genshin.gm.service.PlayerCommandService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +28,9 @@ public class PlayerCommandController {
 
     @Autowired
     private PlayerCommandService service;
+
+    @Autowired
+    private GrasscutterService grasscutterService;
 
     /**
      * 提交新指令
@@ -89,18 +96,103 @@ public class PlayerCommandController {
     }
 
     /**
-     * 点赞
+     * 点赞（需要UID）
      */
     @PostMapping("/{id}/like")
-    public ResponseEntity<Map<String, Object>> likeCommand(@PathVariable String id) {
+    public ResponseEntity<Map<String, Object>> likeCommand(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body) {
+
         Map<String, Object> response = new HashMap<>();
         try {
-            service.likeCommand(id);
-            response.put("success", true);
+            String uid = body.get("uid");
+            if (uid == null || uid.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "请提供UID");
+                return ResponseEntity.ok(response);
+            }
+
+            boolean success = service.likeCommand(id, uid);
+            if (success) {
+                response.put("success", true);
+                response.put("message", "点赞成功");
+            } else {
+                response.put("success", false);
+                response.put("message", "您已经点过赞了");
+            }
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("点赞失败", e);
             response.put("success", false);
+            response.put("message", "点赞失败");
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * 执行指令到玩家账户（通过OpenCommand）
+     */
+    @PostMapping("/{id}/execute")
+    public ResponseEntity<Map<String, Object>> executeCommand(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body) {
+
+        Map<String, Object> response = new HashMap<>();
+        try {
+            String uid = body.get("uid");
+            if (uid == null || uid.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "请提供UID");
+                return ResponseEntity.ok(response);
+            }
+
+            // 获取指令详情
+            Optional<PlayerCommand> optional = service.getCommandById(id);
+            if (!optional.isPresent()) {
+                response.put("success", false);
+                response.put("message", "指令不存在");
+                return ResponseEntity.ok(response);
+            }
+
+            PlayerCommand command = optional.get();
+
+            // 增加浏览数
+            service.incrementViews(id);
+
+            // 获取Grasscutter配置
+            AppConfig config = ConfigLoader.getConfig();
+            if (config == null || config.getGrasscutter() == null) {
+                response.put("success", false);
+                response.put("message", "Grasscutter配置未找到");
+                return ResponseEntity.ok(response);
+            }
+
+            AppConfig.GrasscutterConfig gcConfig = config.getGrasscutter();
+
+            // 替换指令中的@为实际UID
+            String finalCommand = command.getCommand().replace("@", "@" + uid);
+
+            // 执行指令
+            OpenCommandResponse result = grasscutterService.executeConsoleCommand(
+                    gcConfig.getFullUrl(),
+                    gcConfig.getConsoleToken(),
+                    finalCommand
+            );
+
+            if (result.getRetcode() == 200) {
+                response.put("success", true);
+                response.put("message", "指令执行成功");
+                response.put("data", result.getData());
+            } else {
+                response.put("success", false);
+                response.put("message", "指令执行失败: " + result.getMessage());
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("执行指令失败", e);
+            response.put("success", false);
+            response.put("message", "执行失败: " + e.getMessage());
             return ResponseEntity.ok(response);
         }
     }

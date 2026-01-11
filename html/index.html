@@ -712,6 +712,12 @@
                 <button class="sub-btn" onclick="showCommunityType('upload')">上传指令</button>
             </div>
 
+            <!-- UID输入框 -->
+            <div class="form-group" style="margin-top: 20px;">
+                <label>您的UID（用于点赞和使用指令）：</label>
+                <input type="number" id="player-uid" placeholder="请输入您的游戏UID" oninput="savePlayerUid()">
+            </div>
+
             <!-- 指令列表 -->
             <div id="community-list" class="community-list">
                 <!-- 动态生成指令卡片 -->
@@ -828,6 +834,7 @@
             loadQuestData();
             loadGCConfig();
             autoConnectServer();
+            loadPlayerUid(); // 加载保存的UID
         };
 
         // 显示主功能区
@@ -1513,29 +1520,86 @@
             }
         }
 
-        // 点赞指令
-        async function likePlayerCommand(id) {
-            try {
-                await fetch(`/api/commands/${id}/like`, { method: 'POST' });
-                // 重新加载列表
-                loadCommunityCommands(currentCommunityType);
-            } catch (error) {
-                console.error('点赞失败:', error);
+        // ========== UID管理 ==========
+        // 加载保存的UID
+        function loadPlayerUid() {
+            const savedUid = localStorage.getItem('playerUid');
+            if (savedUid) {
+                document.getElementById('player-uid').value = savedUid;
             }
         }
 
-        // 使用指令
-        async function usePlayerCommand(id, command) {
-            try {
-                // 记录浏览
-                await fetch(`/api/commands/${id}/view`, { method: 'POST' });
+        // 保存UID到localStorage
+        function savePlayerUid() {
+            const uid = document.getElementById('player-uid').value.trim();
+            if (uid) {
+                localStorage.setItem('playerUid', uid);
+            }
+        }
 
-                // 复制到剪贴板
-                await navigator.clipboard.writeText(command);
-                alert('✅ 指令已复制到剪贴板！\n\n' + command);
+        // 获取当前UID
+        function getPlayerUid() {
+            const uid = document.getElementById('player-uid').value.trim();
+            if (!uid) {
+                alert('请先在上方输入您的游戏UID！');
+                return null;
+            }
+            return uid;
+        }
+
+        // 点赞指令（需要UID）
+        async function likePlayerCommand(id) {
+            const uid = getPlayerUid();
+            if (!uid) return;
+
+            try {
+                const response = await fetch(`/api/commands/${id}/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ ' + result.message);
+                    // 重新加载列表
+                    loadCommunityCommands(currentCommunityType);
+                } else {
+                    alert('❌ ' + result.message);
+                }
             } catch (error) {
-                console.error('使用指令失败:', error);
-                alert('指令：' + command);
+                console.error('点赞失败:', error);
+                alert('点赞失败，请稍后重试');
+            }
+        }
+
+        // 使用指令（直接发送到玩家账户）
+        async function usePlayerCommand(id, command) {
+            const uid = getPlayerUid();
+            if (!uid) return;
+
+            if (!confirm('确认要将此指令发送到您的游戏账户吗？\n\nUID: ' + uid + '\n指令: ' + command)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/commands/${id}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ uid })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ 指令执行成功！\n\n' + (result.data || '指令已发送到您的账户'));
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            } catch (error) {
+                console.error('执行指令失败:', error);
+                alert('执行失败，请检查服务器连接');
             }
         }
     </script>

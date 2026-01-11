@@ -68,15 +68,29 @@ public class PlayerCommandService {
     }
 
     /**
-     * 点赞
+     * 点赞（需要UID验证，一个UID只能点一次）
      */
-    public void likeCommand(String id) {
+    public boolean likeCommand(String id, String uid) {
+        if (uid == null || uid.trim().isEmpty()) {
+            return false;
+        }
+
         Optional<PlayerCommand> optional = repository.findById(id);
         if (optional.isPresent()) {
             PlayerCommand command = optional.get();
+
+            // 检查该UID是否已经点过赞
+            if (command.getLikedUids().contains(uid)) {
+                return false; // 已经点过赞
+            }
+
+            // 添加UID到点赞列表并增加点赞数
+            command.getLikedUids().add(uid);
             command.setLikes(command.getLikes() + 1);
             repository.save(command);
+            return true;
         }
+        return false;
     }
 
     /**

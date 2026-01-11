@@ -4,6 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 玩家指令实体类
@@ -47,11 +49,15 @@ public class PlayerCommand {
     // 浏览数
     private int views;
 
+    // 点赞的UID列表
+    private Set<String> likedUids;
+
     public PlayerCommand() {
         this.uploadTime = LocalDateTime.now();
         this.reviewStatus = "PENDING";
         this.likes = 0;
         this.views = 0;
+        this.likedUids = new HashSet<>();
     }
 
     // Getters and Setters
@@ -149,5 +155,13 @@ public class PlayerCommand {
 
     public void setViews(int views) {
         this.views = views;
+    }
+
+    public Set<String> getLikedUids() {
+        return likedUids;
+    }
+
+    public void setLikedUids(Set<String> likedUids) {
+        this.likedUids = likedUids;
     }
 }
