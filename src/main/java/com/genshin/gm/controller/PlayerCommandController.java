@@ -258,7 +258,8 @@ public class PlayerCommandController {
         Map<String, Object> response = new HashMap<>();
         try {
             String reviewNote = body != null ? body.get("reviewNote") : "";
-            PlayerCommand updated = service.approveCommand(id, reviewNote);
+            String category = body != null ? body.get("category") : null;
+            PlayerCommand updated = service.approveCommand(id, reviewNote, category);
 
             if (updated != null) {
                 response.put("success", true);
@@ -288,7 +289,8 @@ public class PlayerCommandController {
         Map<String, Object> response = new HashMap<>();
         try {
             String reviewNote = body != null ? body.get("reviewNote") : "";
-            PlayerCommand updated = service.rejectCommand(id, reviewNote);
+            String category = body != null ? body.get("category") : null;
+            PlayerCommand updated = service.rejectCommand(id, reviewNote, category);
 
             if (updated != null) {
                 response.put("success", true);
