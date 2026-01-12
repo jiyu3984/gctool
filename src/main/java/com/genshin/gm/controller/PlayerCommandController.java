@@ -202,12 +202,13 @@ public class PlayerCommandController {
             // 使用智能处理器处理指令，自动添加UID
             String finalCommand = CommandProcessor.processCommand(command.getCommand(), uid);
 
-            logger.info("执行指令 - UID: {}, 原始: {}, 处理后: {}, token: {}", uid, command.getCommand(), finalCommand, token);
+            logger.info("执行指令 - UID: {} (已验证), 原始: {}, 处理后: {}", uid, command.getCommand(), finalCommand);
 
-            // 使用验证后的token执行指令（玩家模式）
-            OpenCommandResponse result = grasscutterService.executeCommand(
+            // 验证通过后，使用控制台token执行指令（绕过玩家权限限制）
+            // 注意：虽然使用控制台token，但玩家必须先通过验证才能执行
+            OpenCommandResponse result = grasscutterService.executeConsoleCommand(
                     gcConfig.getFullUrl(),
-                    token,
+                    gcConfig.getConsoleToken(),
                     finalCommand
             );
 
@@ -217,12 +218,16 @@ public class PlayerCommandController {
             if (result.getRetcode() == 200) {
                 String resultData = result.getData() != null ? result.getData().toString() : "";
 
-                // 检查返回结果是否包含错误提示（比如"用法："）
+                // 检查返回结果是否包含错误提示
                 if (resultData.contains("用法：") || resultData.contains("此命令需要")) {
                     response.put("success", false);
                     response.put("message", "指令格式错误");
                     response.put("data", resultData);
                     response.put("debug", "处理后的指令: " + finalCommand);
+                } else if (resultData.contains("无权限") || resultData.contains("No permission")) {
+                    response.put("success", false);
+                    response.put("message", "权限不足（这不应该发生，请检查控制台token配置）");
+                    response.put("data", resultData);
                 } else {
                     response.put("success", true);
                     response.put("message", "指令执行成功");
