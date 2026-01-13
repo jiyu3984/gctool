@@ -684,9 +684,30 @@
                 </div>
             </div>
 
-            <div class="form-group">
+            <!-- 物品数量输入框（仅物品类型显示） -->
+            <div class="form-group" id="item-quantity-group">
                 <label>数量：</label>
-                <input type="number" id="quantity" value="1" min="1" max="9999">
+                <input type="number" id="item-quantity" value="1" min="1" max="9999">
+            </div>
+
+            <!-- 武器专用输入框 -->
+            <div class="form-group" id="weapon-level-group" style="display: none;">
+                <label>武器等级：</label>
+                <input type="number" id="weapon-level" value="90" min="1" max="101" placeholder="最高101级">
+            </div>
+            <div class="form-group" id="weapon-refinement-group" style="display: none;">
+                <label>精炼等级：</label>
+                <input type="number" id="weapon-refinement" value="1" min="1" max="5" placeholder="最高精炼5">
+            </div>
+            <div class="form-group" id="weapon-quantity-group" style="display: none;">
+                <label>数量：</label>
+                <input type="number" id="weapon-quantity" value="1" min="1" max="99">
+            </div>
+
+            <!-- 角色专用输入框 -->
+            <div class="form-group" id="avatar-level-group" style="display: none;">
+                <label>角色等级：</label>
+                <input type="number" id="avatar-level" value="90" min="1" max="90" placeholder="最高90级">
             </div>
 
             <button class="generate-btn" onclick="generateGiveCommand()">生成指令</button>
@@ -892,6 +913,31 @@
             selectedItemName = '';
             document.getElementById('item-display').textContent = '点击选择' + labels[type] + '...';
             document.getElementById('item-display').className = 'placeholder';
+
+            // 根据类型显示/隐藏对应的输入框
+            const itemQuantityGroup = document.getElementById('item-quantity-group');
+            const weaponLevelGroup = document.getElementById('weapon-level-group');
+            const weaponRefinementGroup = document.getElementById('weapon-refinement-group');
+            const weaponQuantityGroup = document.getElementById('weapon-quantity-group');
+            const avatarLevelGroup = document.getElementById('avatar-level-group');
+
+            // 先隐藏所有输入框
+            itemQuantityGroup.style.display = 'none';
+            weaponLevelGroup.style.display = 'none';
+            weaponRefinementGroup.style.display = 'none';
+            weaponQuantityGroup.style.display = 'none';
+            avatarLevelGroup.style.display = 'none';
+
+            // 根据类型显示对应的输入框
+            if (type === 'item') {
+                itemQuantityGroup.style.display = 'block';
+            } else if (type === 'weapon') {
+                weaponLevelGroup.style.display = 'block';
+                weaponRefinementGroup.style.display = 'block';
+                weaponQuantityGroup.style.display = 'block';
+            } else if (type === 'avatar') {
+                avatarLevelGroup.style.display = 'block';
+            }
 
             // 只在缓存不存在时才加载数据
             if (!cachedData[type + 's']) {
@@ -1168,45 +1214,66 @@
         // 生成物品指令
         async function generateGiveCommand() {
             const itemId = selectedItemId;
-            const quantity = parseInt(document.getElementById('quantity').value);
             const globalUid = document.getElementById('player-uid').value.trim();
+            let command = '';
 
             if (!itemId) {
-                alert('请选择物品！');
+                const labels = {item: '物品', weapon: '武器', avatar: '角色'};
+                alert('请选择' + labels[currentItemType] + '！');
                 return;
             }
 
-            if (!quantity || quantity <= 0) {
-                alert('请输入有效数量！');
-                return;
-            }
+            // 根据类型生成不同格式的命令
+            if (currentItemType === 'item') {
+                // 物品：give 物品ID x数量
+                const quantity = parseInt(document.getElementById('item-quantity').value);
+                if (!quantity || quantity <= 0) {
+                    alert('请输入有效数量！');
+                    return;
+                }
+                command = `give ${itemId} x${quantity}`;
+            } else if (currentItemType === 'weapon') {
+                // 武器：give 武器ID lv等级 x数量 r精炼等级
+                const level = parseInt(document.getElementById('weapon-level').value);
+                const refinement = parseInt(document.getElementById('weapon-refinement').value);
+                const quantity = parseInt(document.getElementById('weapon-quantity').value);
 
-            try {
-                const response = await fetch(`${API_BASE}/command/give`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({itemId, quantity})
-                });
-
-                const result = await response.json();
-                let command = result.command;
-
-                // 使用全局UID
-                if (globalUid) {
-                    command += ' @' + globalUid;
-                } else {
-                    command += ' @';
+                if (!level || level <= 0 || level > 101) {
+                    alert('请输入有效的武器等级（1-101）！');
+                    return;
+                }
+                if (!refinement || refinement <= 0 || refinement > 5) {
+                    alert('请输入有效的精炼等级（1-5）！');
+                    return;
+                }
+                if (!quantity || quantity <= 0) {
+                    alert('请输入有效数量！');
+                    return;
                 }
 
-                showResult(command);
-                lastGeneratedCommand = command;
-
-                // 如果服务器已连接，启用执行按钮
-                document.getElementById('execute-item-btn').disabled = !isServerConnected;
-            } catch (error) {
-                alert('生成指令失败！');
-                console.error(error);
+                command = `give ${itemId} lv${level} x${quantity} r${refinement}`;
+            } else if (currentItemType === 'avatar') {
+                // 角色：give 角色ID lv等级
+                const level = parseInt(document.getElementById('avatar-level').value);
+                if (!level || level <= 0 || level > 90) {
+                    alert('请输入有效的角色等级（1-90）！');
+                    return;
+                }
+                command = `give ${itemId} lv${level}`;
             }
+
+            // 添加UID占位符（后端会自动处理位置）
+            if (globalUid) {
+                command += ' @' + globalUid;
+            } else {
+                command += ' @';
+            }
+
+            showResult(command);
+            lastGeneratedCommand = command;
+
+            // 如果服务器已连接，启用执行按钮
+            document.getElementById('execute-item-btn').disabled = !isServerConnected;
         }
 
         // 生成任务指令
