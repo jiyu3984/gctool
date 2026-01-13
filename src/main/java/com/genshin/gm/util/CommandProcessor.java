@@ -91,6 +91,11 @@ public class CommandProcessor {
 
     /**
      * 处理指令，智能添加UID
+     * 规则：
+     * 1. give 和 quest 命令：UID 在命令名后面（例如：give @UID 202 x999）
+     * 2. 其他需要UID的命令：UID 在命令最后（例如：tp 1000 500 -1000 @UID）
+     * 3. 处理前先删除命令中已有的 @ 符号，然后统一添加 @UID
+     *
      * @param command 原始指令
      * @param uid 玩家UID
      * @return 处理后的指令
@@ -106,23 +111,6 @@ public class CommandProcessor {
 
         command = command.trim();
         uid = uid.trim();
-
-        // 如果已经包含@UID占位符，直接替换
-        if (command.contains("@UID")) {
-            return command.replace("@UID", "@" + uid);
-        }
-
-        // 如果包含 "@ " (@ + 空格)，替换为 @UID + 空格
-        if (command.contains("@ ")) {
-            return command.replace("@ ", "@" + uid + " ");
-        }
-
-        // 如果已经包含@但后面跟着数字（说明已经有UID了），不处理
-        Pattern uidPattern = Pattern.compile("@\\d+");
-        Matcher matcher = uidPattern.matcher(command);
-        if (matcher.find()) {
-            return command; // 已经有UID了，不处理
-        }
 
         // 分割指令获取指令名
         String[] parts = command.split("\\s+");
@@ -142,40 +130,42 @@ public class CommandProcessor {
             return command;
         }
 
-        // 检查是否是需要UID的指令
-        if (UID_TARGETABLE_COMMANDS.contains(cmdName)) {
-            // 检查第一个参数是否已经是@开头的UID
-            if (parts.length > 1 && parts[1].startsWith("@")) {
-                // 已经有@，可能是占位符，替换它
-                parts[1] = "@" + uid;
-                return String.join(" ", parts);
+        // 第一步：移除命令中所有的 @ 符号和相关内容
+        // 匹配模式：@UID, @数字, @ （包括后面的空格）
+        String cleanCommand = command.replaceAll("@UID", "")
+                                    .replaceAll("@\\d+", "")
+                                    .replaceAll("@\\s+", "")
+                                    .replaceAll("@", "")
+                                    .replaceAll("\\s+", " ")
+                                    .trim();
+
+        // 重新分割清理后的命令
+        parts = cleanCommand.split("\\s+");
+        String cleanCmdName = parts[0].toLowerCase();
+        if (cleanCmdName.startsWith("/")) {
+            cleanCmdName = cleanCmdName.substring(1);
+        }
+
+        // 第二步：根据命令类型添加 @UID
+        // give 和 quest 命令：UID 在命令名后面
+        if (cleanCmdName.equals("give") || cleanCmdName.equals("giveall") || cleanCmdName.equals("quest")) {
+            String[] cmdParts = cleanCommand.split("\\s+", 2); // 分割成命令名和剩余部分
+            if (cmdParts.length == 1) {
+                // 只有命令名，没有参数
+                return cmdParts[0] + " @" + uid;
             } else {
-                // 没有@，在指令名后插入@UID
-                StringBuilder result = new StringBuilder(parts[0]);
-                result.append(" @").append(uid);
-                for (int i = 1; i < parts.length; i++) {
-                    result.append(" ").append(parts[i]);
-                }
-                return result.toString();
+                // 命令名 + @UID + 剩余参数
+                return cmdParts[0] + " @" + uid + " " + cmdParts[1];
             }
         }
 
-        // 其他情况：尝试在指令名后添加@UID（保守策略）
-        // 这是为了处理一些未列出但可能需要UID的指令
-        if (parts.length > 1) {
-            // 如果第二个参数看起来不像UID（不是纯数字），则在前面添加UID
-            if (!parts[1].matches("\\d+")) {
-                StringBuilder result = new StringBuilder(parts[0]);
-                result.append(" @").append(uid);
-                for (int i = 1; i < parts.length; i++) {
-                    result.append(" ").append(parts[i]);
-                }
-                return result.toString();
-            }
+        // 其他所有需要UID的命令：UID 在最后
+        if (UID_TARGETABLE_COMMANDS.contains(cleanCmdName)) {
+            return cleanCommand + " @" + uid;
         }
 
-        // 默认返回原指令
-        return command;
+        // 未知命令，保守策略：在最后添加 @UID
+        return cleanCommand + " @" + uid;
     }
 
     /**
