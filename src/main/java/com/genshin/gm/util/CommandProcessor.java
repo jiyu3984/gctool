@@ -47,6 +47,9 @@ public class CommandProcessor {
             // 邮件
             "mail",
 
+            // 圣遗物构建
+            "build",
+
             // 其他
             "kick",
             "ban",
@@ -365,6 +368,17 @@ public class CommandProcessor {
                 // weather 可以有参数也可以没有
                 if (parts.length > 1 && !parts[1].matches("\\d+")) {
                     return "weather指令的天气ID必须是数字，用法: weather [weatherId] [climateId]";
+                }
+                break;
+
+            case "build":
+                // build 需要构建名称
+                if (parts.length < 2) {
+                    return "build指令缺少构建名称，用法: build <buildName>";
+                }
+                // 验证构建名称格式（只允许字母、数字）
+                if (!parts[1].matches("[a-zA-Z0-9]+")) {
+                    return "build指令的构建名称格式错误，只允许字母和数字";
                 }
                 break;
 

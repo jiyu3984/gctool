@@ -674,6 +674,7 @@
                 <button class="sub-btn active" onclick="showItemType('item')">物品</button>
                 <button class="sub-btn" onclick="showItemType('weapon')">武器</button>
                 <button class="sub-btn" onclick="showItemType('avatar')">角色</button>
+                <button class="sub-btn" onclick="showItemType('artifact')">圣遗物</button>
             </div>
 
             <div class="form-group">
@@ -708,6 +709,37 @@
             <div class="form-group" id="avatar-level-group" style="display: none;">
                 <label>角色等级：</label>
                 <input type="number" id="avatar-level" value="90" min="1" max="90" placeholder="最高90级">
+            </div>
+
+            <!-- 圣遗物专用选择框 -->
+            <div class="form-group" id="artifact-build-group" style="display: none;">
+                <label>选择构建套装：</label>
+                <select id="artifact-build-select" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
+                    <option value="">请选择构建套装...</option>
+                    <optgroup label="元素DPS套装">
+                        <option value="crimson">Crimson - 火套DPS</option>
+                        <option value="pyrocodex">Pyrocodex - 火系法典</option>
+                        <option value="pyroscroll">Pyroscroll - 火系卷轴</option>
+                        <option value="hydronymph">Hydronymph - 水套</option>
+                        <option value="anemodps1">AnemoDPS1 - 风套DPS 1</option>
+                        <option value="anemodps2">AnemoDPS2 - 风套DPS 2</option>
+                    </optgroup>
+                    <optgroup label="草元素套装">
+                        <option value="dendroEM">DendroEM - 草元素精通</option>
+                        <option value="dendrosup1">DendroSup1 - 草辅助 1</option>
+                        <option value="dendrosup2">DendroSup2 - 草辅助 2</option>
+                    </optgroup>
+                    <optgroup label="通用套装">
+                        <option value="emblem1">Emblem1 - 绝缘套装 1</option>
+                        <option value="emblem2">Emblem2 - 绝缘套装 2</option>
+                        <option value="archaicdps">ArchaicDPS - 古华DPS</option>
+                        <option value="archaicdps2">ArchaicDPS2 - 古华DPS 2</option>
+                    </optgroup>
+                    <optgroup label="元素精通">
+                        <option value="em1">EM1 - 元素精通 1</option>
+                        <option value="em2">EM2 - 元素精通 2</option>
+                    </optgroup>
+                </select>
             </div>
 
             <button class="generate-btn" onclick="generateGiveCommand()">生成指令</button>
@@ -905,14 +937,22 @@
             document.querySelectorAll('#items-section .sub-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
-            const labels = {item: '物品', weapon: '武器', avatar: '角色'};
-            document.getElementById('item-label').textContent = '选择' + labels[type] + '：';
+            const labels = {item: '物品', weapon: '武器', avatar: '角色', artifact: '圣遗物构建'};
 
-            // 清空选择
-            selectedItemId = null;
-            selectedItemName = '';
-            document.getElementById('item-display').textContent = '点击选择' + labels[type] + '...';
-            document.getElementById('item-display').className = 'placeholder';
+            // 圣遗物类型特殊处理：不需要选择物品，直接选择构建
+            const itemSelectGroup = document.querySelector('.form-group:has(#item-select-input)');
+            if (type === 'artifact') {
+                itemSelectGroup.style.display = 'none'; // 隐藏物品选择框
+            } else {
+                itemSelectGroup.style.display = 'block';
+                document.getElementById('item-label').textContent = '选择' + labels[type] + '：';
+
+                // 清空选择
+                selectedItemId = null;
+                selectedItemName = '';
+                document.getElementById('item-display').textContent = '点击选择' + labels[type] + '...';
+                document.getElementById('item-display').className = 'placeholder';
+            }
 
             // 根据类型显示/隐藏对应的输入框
             const itemQuantityGroup = document.getElementById('item-quantity-group');
@@ -920,6 +960,7 @@
             const weaponRefinementGroup = document.getElementById('weapon-refinement-group');
             const weaponQuantityGroup = document.getElementById('weapon-quantity-group');
             const avatarLevelGroup = document.getElementById('avatar-level-group');
+            const artifactBuildGroup = document.getElementById('artifact-build-group');
 
             // 先隐藏所有输入框
             itemQuantityGroup.style.display = 'none';
@@ -927,6 +968,7 @@
             weaponRefinementGroup.style.display = 'none';
             weaponQuantityGroup.style.display = 'none';
             avatarLevelGroup.style.display = 'none';
+            artifactBuildGroup.style.display = 'none';
 
             // 根据类型显示对应的输入框
             if (type === 'item') {
@@ -937,14 +979,18 @@
                 weaponQuantityGroup.style.display = 'block';
             } else if (type === 'avatar') {
                 avatarLevelGroup.style.display = 'block';
+            } else if (type === 'artifact') {
+                artifactBuildGroup.style.display = 'block';
             }
 
-            // 只在缓存不存在时才加载数据
-            if (!cachedData[type + 's']) {
-                loadItemData(type);
-            } else {
-                // 使用缓存数据
-                currentItemData = cachedData[type + 's'];
+            // 只在缓存不存在时才加载数据（圣遗物不需要加载数据）
+            if (type !== 'artifact') {
+                if (!cachedData[type + 's']) {
+                    loadItemData(type);
+                } else {
+                    // 使用缓存数据
+                    currentItemData = cachedData[type + 's'];
+                }
             }
 
             document.getElementById('result-box').classList.remove('show');
@@ -1213,53 +1259,65 @@
 
         // 生成物品指令
         async function generateGiveCommand() {
-            const itemId = selectedItemId;
             const globalUid = document.getElementById('player-uid').value.trim();
             let command = '';
 
-            if (!itemId) {
-                const labels = {item: '物品', weapon: '武器', avatar: '角色'};
-                alert('请选择' + labels[currentItemType] + '！');
-                return;
-            }
-
-            // 根据类型生成不同格式的命令
-            if (currentItemType === 'item') {
-                // 物品：give 物品ID x数量
-                const quantity = parseInt(document.getElementById('item-quantity').value);
-                if (!quantity || quantity <= 0) {
-                    alert('请输入有效数量！');
+            // 圣遗物类型特殊处理
+            if (currentItemType === 'artifact') {
+                const buildName = document.getElementById('artifact-build-select').value;
+                if (!buildName) {
+                    alert('请选择圣遗物构建套装！');
                     return;
                 }
-                command = `give ${itemId} x${quantity}`;
-            } else if (currentItemType === 'weapon') {
-                // 武器：give 武器ID lv等级 x数量 r精炼等级
-                const level = parseInt(document.getElementById('weapon-level').value);
-                const refinement = parseInt(document.getElementById('weapon-refinement').value);
-                const quantity = parseInt(document.getElementById('weapon-quantity').value);
-
-                if (!level || level <= 0 || level > 101) {
-                    alert('请输入有效的武器等级（1-101）！');
-                    return;
-                }
-                if (!refinement || refinement <= 0 || refinement > 5) {
-                    alert('请输入有效的精炼等级（1-5）！');
-                    return;
-                }
-                if (!quantity || quantity <= 0) {
-                    alert('请输入有效数量！');
+                // build 命令格式：build 构建名称 @UID
+                command = `build ${buildName}`;
+            } else {
+                // 其他类型需要选择物品
+                const itemId = selectedItemId;
+                if (!itemId) {
+                    const labels = {item: '物品', weapon: '武器', avatar: '角色'};
+                    alert('请选择' + labels[currentItemType] + '！');
                     return;
                 }
 
-                command = `give ${itemId} lv${level} x${quantity} r${refinement}`;
-            } else if (currentItemType === 'avatar') {
-                // 角色：give 角色ID lv等级
-                const level = parseInt(document.getElementById('avatar-level').value);
-                if (!level || level <= 0 || level > 90) {
-                    alert('请输入有效的角色等级（1-90）！');
-                    return;
+                // 根据类型生成不同格式的命令
+                if (currentItemType === 'item') {
+                    // 物品：give 物品ID x数量
+                    const quantity = parseInt(document.getElementById('item-quantity').value);
+                    if (!quantity || quantity <= 0) {
+                        alert('请输入有效数量！');
+                        return;
+                    }
+                    command = `give ${itemId} x${quantity}`;
+                } else if (currentItemType === 'weapon') {
+                    // 武器：give 武器ID lv等级 x数量 r精炼等级
+                    const level = parseInt(document.getElementById('weapon-level').value);
+                    const refinement = parseInt(document.getElementById('weapon-refinement').value);
+                    const quantity = parseInt(document.getElementById('weapon-quantity').value);
+
+                    if (!level || level <= 0 || level > 101) {
+                        alert('请输入有效的武器等级（1-101）！');
+                        return;
+                    }
+                    if (!refinement || refinement <= 0 || refinement > 5) {
+                        alert('请输入有效的精炼等级（1-5）！');
+                        return;
+                    }
+                    if (!quantity || quantity <= 0) {
+                        alert('请输入有效数量！');
+                        return;
+                    }
+
+                    command = `give ${itemId} lv${level} x${quantity} r${refinement}`;
+                } else if (currentItemType === 'avatar') {
+                    // 角色：give 角色ID lv等级
+                    const level = parseInt(document.getElementById('avatar-level').value);
+                    if (!level || level <= 0 || level > 90) {
+                        alert('请输入有效的角色等级（1-90）！');
+                        return;
+                    }
+                    command = `give ${itemId} lv${level}`;
                 }
-                command = `give ${itemId} lv${level}`;
             }
 
             // 添加UID占位符（后端会自动处理位置）
