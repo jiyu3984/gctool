@@ -677,7 +677,7 @@
                 <button class="sub-btn" onclick="showItemType('artifact')">圣遗物</button>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="item-select-group">
                 <label id="item-label">选择物品：</label>
                 <div class="select-input" id="item-select-input" onclick="openItemPanel()">
                     <span class="placeholder" id="item-display">点击选择物品...</span>
@@ -940,7 +940,7 @@
             const labels = {item: '物品', weapon: '武器', avatar: '角色', artifact: '圣遗物构建'};
 
             // 圣遗物类型特殊处理：不需要选择物品，直接选择构建
-            const itemSelectGroup = document.querySelector('.form-group:has(#item-select-input)');
+            const itemSelectGroup = document.getElementById('item-select-group');
             if (type === 'artifact') {
                 itemSelectGroup.style.display = 'none'; // 隐藏物品选择框
             } else {
