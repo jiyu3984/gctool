@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VerificationService {
     private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
 
-    // 验证码有效期（分钟）- OpenCommand默认60秒，我们设置为1分钟
-    private static final int EXPIRY_MINUTES = 1;
+    // 验证码有效期（分钟）- 设置为5分钟，给玩家足够的验证时间
+    private static final int EXPIRY_MINUTES = 5;
 
     // 存储验证信息的Map: UID -> VerificationCode
     private final Map<String, VerificationCode> verificationCodes = new ConcurrentHashMap<>();

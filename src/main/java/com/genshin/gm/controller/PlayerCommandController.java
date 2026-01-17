@@ -353,4 +353,100 @@ public class PlayerCommandController {
             return ResponseEntity.ok(response);
         }
     }
+
+    /**
+     * 执行自定义指令（带安全验证）
+     */
+    @PostMapping("/custom/execute")
+    public ResponseEntity<Map<String, Object>> executeCustomCommand(@RequestBody Map<String, String> body) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            String uid = body.get("uid");
+            String command = body.get("command");
+
+            if (uid == null || uid.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "请提供UID");
+                return ResponseEntity.ok(response);
+            }
+
+            if (command == null || command.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "请输入指令");
+                return ResponseEntity.ok(response);
+            }
+
+            command = command.trim();
+
+            // 1. 检查是否为危险指令
+            String dangerousCheck = CommandProcessor.checkDangerousCommand(command);
+            if (dangerousCheck != null) {
+                response.put("success", false);
+                response.put("message", dangerousCheck);
+                response.put("dangerous", true);
+                logger.warn("UID {} 尝试执行危险指令: {}", uid, command);
+                return ResponseEntity.ok(response);
+            }
+
+            // 2. 验证指令格式
+            String validationError = CommandProcessor.validateCommand(command);
+            if (validationError != null) {
+                response.put("success", false);
+                response.put("message", "指令格式错误: " + validationError);
+                return ResponseEntity.ok(response);
+            }
+
+            // 3. 检查验证状态
+            if (!verificationService.isVerified(uid)) {
+                response.put("success", false);
+                response.put("message", "请先验证您的UID");
+                response.put("needVerification", true);
+                return ResponseEntity.ok(response);
+            }
+
+            // 4. 获取验证token
+            String token = verificationService.getVerifiedToken(uid);
+            if (token == null) {
+                response.put("success", false);
+                response.put("message", "验证已过期，请重新验证");
+                response.put("needVerification", true);
+                return ResponseEntity.ok(response);
+            }
+
+            // 5. 处理指令（添加UID）
+            String finalCommand = CommandProcessor.processCommand(command, uid);
+            logger.info("执行自定义指令: UID={}, 原始={}, 处理后={}", uid, command, finalCommand);
+
+            // 6. 使用控制台token执行指令（绕过权限限制）
+            AppConfig.GrasscutterConfig gcConfig = ConfigLoader.getConfig().getGrasscutter();
+            OpenCommandResponse result = grasscutterService.executeConsoleCommand(
+                    gcConfig.getFullUrl(),
+                    gcConfig.getConsoleToken(),
+                    finalCommand
+            );
+
+            // 7. 处理执行结果
+            if (result != null && result.getRetcode() == 200) {
+                response.put("success", true);
+                String resultData = result.getData() != null ? result.getData().toString() : "指令执行成功";
+                response.put("data", resultData);
+                response.put("message", "指令执行成功");
+                logger.info("自定义指令执行成功: UID={}, 指令={}", uid, finalCommand);
+            } else {
+                response.put("success", false);
+                String errorMsg = result != null ? result.getMessage() : "未知错误";
+                response.put("message", "执行失败: " + errorMsg);
+                logger.error("自定义指令执行失败: UID={}, 指令={}, 错误={}", uid, finalCommand, errorMsg);
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("执行自定义指令失败", e);
+            response.put("success", false);
+            response.put("message", "执行失败: " + e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
 }

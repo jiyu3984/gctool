@@ -56,14 +56,8 @@ public class CommandProcessor {
             "unban"
     ));
 
-    // 不需要UID的指令列表（这些指令直接对当前玩家生效，或是服务器管理指令）
+    // 不需要UID的指令列表（仅服务器级别的管理指令）
     private static final Set<String> NO_UID_COMMANDS = new HashSet<>(Arrays.asList(
-            // 信息查询类
-            "help", "h",
-            "list",
-            "position", "pos",
-            "status",
-
             // 服务器管理类
             "reload",
             "stop",
@@ -72,24 +66,32 @@ public class CommandProcessor {
             "broadcast",
             "sendmessage", "say",
 
-            // 自身效果类（作用于执行者自己）
-            "clear",        // 清理自己的物品
-            "spawn",        // 在自己附近生成
-            "weather",      // 改变当前天气
-            "coop",         // 加入联机
-            "enterdungeon", "dungeon",  // 自己进入副本
-            "resetshop",    // 重置自己的商店
-            "resetconst",   // 重置自己的命座
-            "unlockall",    // 解锁自己的所有内容
+            // 信息查询类
+            "help", "h",
+            "list",
+            "status"
+    ));
 
-            // prop系列（作用于自己）
-            "prop", "setprop",
-            "godmode", "god",
-            "nostamina", "ns",
-            "unlimitedenergy", "ue",
+    // 危险指令列表（禁止玩家使用的管理员指令）
+    private static final Set<String> DANGEROUS_COMMANDS = new HashSet<>(Arrays.asList(
+            // 权限管理（极度危险 - 可以给予自己所有权限）
+            "permission",
 
-            // 其他自身指令
-            "permission"    // 给自己添加权限
+            // 账户管理
+            "account",
+
+            // 服务器控制
+            "stop",
+            "reload",
+
+            // 封禁相关
+            "kick",
+            "ban",
+            "unban",
+
+            // 广播（防止滥用）
+            "broadcast",
+            "announce", "announcement"
     ));
 
     /**
@@ -188,6 +190,34 @@ public class CommandProcessor {
 
         String cmdName = parts[0].toLowerCase();
         return UID_TARGETABLE_COMMANDS.contains(cmdName);
+    }
+
+    /**
+     * 检查指令是否为危险指令（禁止玩家使用）
+     * @param command 指令
+     * @return 如果是危险指令返回错误信息，否则返回null
+     */
+    public static String checkDangerousCommand(String command) {
+        if (command == null || command.trim().isEmpty()) {
+            return null;
+        }
+
+        String[] parts = command.trim().split("\\s+");
+        if (parts.length == 0) {
+            return null;
+        }
+
+        String cmdName = parts[0].toLowerCase();
+        // 移除斜杠前缀
+        if (cmdName.startsWith("/")) {
+            cmdName = cmdName.substring(1);
+        }
+
+        if (DANGEROUS_COMMANDS.contains(cmdName)) {
+            return "该指令已被系统禁止：" + cmdName + " 属于管理员级指令，可能存在安全风险";
+        }
+
+        return null; // 不是危险指令
     }
 
     /**
