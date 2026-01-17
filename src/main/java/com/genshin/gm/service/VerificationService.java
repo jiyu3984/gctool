@@ -22,7 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VerificationService {
     private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
 
-    // 验证码有效期（分钟）- OpenCommand默认60秒，我们设置为1分钟
+    // 验证码有效期（分钟）- OpenCommand的验证码验证有效期保持默认（通常60秒）
+    // 前端会在验证成功后维护5分钟的session有效期
     private static final int EXPIRY_MINUTES = 1;
 
     // 存储验证信息的Map: UID -> VerificationCode

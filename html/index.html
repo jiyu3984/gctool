@@ -647,6 +647,7 @@
         <div class="menu">
             <button class="menu-btn active" onclick="showSection('items')">物品生成</button>
             <button class="menu-btn" onclick="showSection('quest')">任务</button>
+            <button class="menu-btn" onclick="showSection('custom')">自定义指令</button>
             <button class="menu-btn" onclick="showSection('community')">玩家指令广场</button>
         </div>
 
@@ -658,7 +659,7 @@
             </div>
 
             <div class="form-group" id="verification-area" style="margin-bottom: 0;">
-                <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（1分钟有效期）：</label>
+                <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（请在1分钟内验证）：</label>
                 <input type="text" id="verification-code" placeholder="请输入4位验证码" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 22px; letter-spacing: 8px; text-align: center; font-weight: 600; margin-bottom: 10px;">
                 <div style="display: flex; gap: 10px;">
                     <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="flex: 1; padding: 14px; margin: 0; font-size: 16px;">发送验证码</button>
@@ -677,7 +678,7 @@
                 <button class="sub-btn" onclick="showItemType('artifact')">圣遗物</button>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="item-select-group">
                 <label id="item-label">选择物品：</label>
                 <div class="select-input" id="item-select-input" onclick="openItemPanel()">
                     <span class="placeholder" id="item-display">点击选择物品...</span>
@@ -763,6 +764,39 @@
 
             <button class="generate-btn" onclick="generateQuestCommand()">生成指令</button>
             <button class="execute-btn" id="execute-quest-btn" onclick="executeGeneratedCommand('quest')" disabled>向服务器执行指令</button>
+        </div>
+
+        <!-- 自定义指令区域 -->
+        <div id="custom-section" class="section">
+            <h2 style="color: #667eea; margin-bottom: 20px;">🔧 自定义指令输入</h2>
+
+            <div class="form-group">
+                <label>输入指令：</label>
+                <textarea id="custom-command-input" rows="4" placeholder="例如: give 201 x999&#10;或: tp 2000 300 -1000&#10;或: unlockall&#10;&#10;注意：不要包含UID，系统会自动添加" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; font-family: monospace; resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="generate-btn" onclick="validateAndExecuteCustomCommand()">验证并执行指令</button>
+                <button class="generate-btn" style="background: #6c757d;" onclick="clearCustomCommand()">清空</button>
+            </div>
+
+            <!-- 指令验证结果显示 -->
+            <div id="custom-command-result" style="margin-top: 15px; padding: 15px; border-radius: 8px; display: none;"></div>
+
+            <!-- 安全提示 -->
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #ffc107;">
+                <h3 style="margin: 0 0 10px 0; color: #f57c00; font-size: 16px;">⚠️ 安全提示</h3>
+                <div style="font-size: 14px; color: #555; line-height: 1.6;">
+                    <p style="margin: 5px 0;">为了系统安全，以下类型的指令将被<strong>自动拦截</strong>：</p>
+                    <ul style="margin: 5px 0 10px 20px;">
+                        <li>❌ 权限管理指令 (permission add/remove)</li>
+                        <li>❌ 账户管理指令 (account create/delete)</li>
+                        <li>❌ 服务器控制指令 (stop, reload)</li>
+                        <li>❌ 封禁相关指令 (ban, unban, kick)</li>
+                    </ul>
+                    <p style="margin: 5px 0; color: #4caf50;"><strong>✅ 允许的指令：</strong>传送、给予物品、角色管理、场景控制等玩家级指令</p>
+                </div>
+            </div>
         </div>
 
         <!-- 玩家指令广场区域 -->
@@ -940,7 +974,7 @@
             const labels = {item: '物品', weapon: '武器', avatar: '角色', artifact: '圣遗物构建'};
 
             // 圣遗物类型特殊处理：不需要选择物品，直接选择构建
-            const itemSelectGroup = document.querySelector('.form-group:has(#item-select-input)');
+            const itemSelectGroup = document.getElementById('item-select-group');
             if (type === 'artifact') {
                 itemSelectGroup.style.display = 'none'; // 隐藏物品选择框
             } else {
@@ -1526,6 +1560,92 @@
             }
         }
 
+        // ========== 自定义指令功能 ==========
+
+        // 清空自定义指令输入
+        function clearCustomCommand() {
+            document.getElementById('custom-command-input').value = '';
+            const resultDiv = document.getElementById('custom-command-result');
+            resultDiv.style.display = 'none';
+        }
+
+        // 验证并执行自定义指令
+        async function validateAndExecuteCustomCommand() {
+            const command = document.getElementById('custom-command-input').value.trim();
+            const resultDiv = document.getElementById('custom-command-result');
+            const uid = document.getElementById('player-uid').value.trim();
+
+            if (!command) {
+                alert('请输入指令！');
+                return;
+            }
+
+            if (!uid) {
+                alert('请先输入您的UID！');
+                return;
+            }
+
+            // 显示执行中状态
+            resultDiv.style.display = 'block';
+            resultDiv.style.background = '#e3f2fd';
+            resultDiv.style.color = '#1976d2';
+            resultDiv.innerHTML = '⏳ 验证并执行中...';
+
+            try {
+                const response = await fetch('/api/commands/custom/execute', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({command, uid})
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 成功
+                    resultDiv.style.background = '#e8f5e9';
+                    resultDiv.style.color = '#2e7d32';
+                    resultDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 8px;">✅ 指令执行成功</div>
+                        <div style="font-size: 14px; color: #666;">${result.data || '指令已成功发送到服务器'}</div>
+                    `;
+                } else if (result.dangerous) {
+                    // 危险指令被拦截
+                    resultDiv.style.background = '#ffebee';
+                    resultDiv.style.color = '#c62828';
+                    resultDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 8px;">🚫 危险指令已拦截</div>
+                        <div style="font-size: 14px;">${result.message}</div>
+                    `;
+                } else if (result.needVerification) {
+                    // 需要验证
+                    resultDiv.style.background = '#fff3cd';
+                    resultDiv.style.color = '#f57c00';
+                    resultDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 需要验证UID</div>
+                        <div style="font-size: 14px;">${result.message}</div>
+                        <div style="margin-top: 10px; font-size: 13px;">请在页面顶部完成UID验证后再执行指令</div>
+                    `;
+                } else {
+                    // 其他错误
+                    resultDiv.style.background = '#ffebee';
+                    resultDiv.style.color = '#c62828';
+                    resultDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 8px;">❌ 执行失败</div>
+                        <div style="font-size: 14px;">${result.message}</div>
+                    `;
+                }
+
+            } catch (error) {
+                resultDiv.style.background = '#ffebee';
+                resultDiv.style.color = '#c62828';
+                resultDiv.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 8px;">❌ 网络错误</div>
+                    <div style="font-size: 14px;">${error.message}</div>
+                `;
+                console.error('执行自定义指令失败:', error);
+            }
+        }
+
         // ========== 玩家指令广场功能 ==========
         let currentCommunityType = 'latest';
 
@@ -1809,21 +1929,24 @@
                     statusDiv.style.display = 'block';
                     statusDiv.style.background = '#e8f5e9';
                     statusDiv.style.color = '#2e7d32';
-                    statusDiv.textContent = '✅ 验证成功！现在可以使用远程指令了';
+                    statusDiv.textContent = '✅ 验证成功！已验证状态将保持5分钟';
 
-                    // 保存验证状态到localStorage
+                    // 保存验证状态到localStorage（前端5分钟有效期）
+                    const now = new Date();
+                    const expiryTime = new Date(now.getTime() + 5 * 60 * 1000); // 5分钟后过期
                     const verificationData = {
                         uid: uid,
                         verified: true,
-                        expiryTime: result.expiryTime
+                        verifiedAt: now.toISOString(),
+                        expiryTime: expiryTime.toISOString()
                     };
                     localStorage.setItem('verification', JSON.stringify(verificationData));
 
-                    // 禁用输入框和按钮
-                    document.getElementById('verification-code').disabled = true;
-                    document.getElementById('send-code-btn').disabled = true;
-                    verifyBtn.disabled = true;
-                    verifyBtn.textContent = '已验证';
+                    // 更新UI状态
+                    updateVerificationUI(true);
+
+                    // 清空验证码输入
+                    document.getElementById('verification-code').value = '';
                 } else {
                     statusDiv.style.display = 'block';
                     statusDiv.style.background = '#ffebee';
@@ -1966,7 +2089,7 @@
                     alert('✅ 指令执行成功！\n\n' + (result.data || '指令已发送到您的账户'));
                 } else {
                     if (result.needVerification) {
-                        alert('⚠️ ' + result.message + '\n\n验证码可能已过期（有效期1分钟），请重新验证：\n1. 确保游戏在线\n2. 点击"发送验证码"按钮\n3. 在游戏中查看弹出的验证码\n4. 输入验证码并验证');
+                        alert('⚠️ ' + result.message + '\n\n请重新验证：\n1. 确保游戏在线\n2. 点击"发送验证码"按钮\n3. 在游戏中查看好友消息中的4位验证码\n4. 在1分钟内输入验证码并点击验证\n\n提示：验证成功后，已验证状态将保持5分钟');
                         // 清除本地验证状态
                         localStorage.removeItem('verification');
                         updateVerificationUI(false);
