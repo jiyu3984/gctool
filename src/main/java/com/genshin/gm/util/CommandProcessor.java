@@ -280,21 +280,12 @@ public class CommandProcessor {
 
             case "give":
             case "giveall":
-                // give 需要物品ID或角色ID
+                // give 需要至少一个参数（物品ID、角色ID或其他参数）
                 if (parts.length < 2) {
-                    return "give指令缺少物品/角色ID，用法: give <itemId|avatarId> [x<amount>] [lv<level>] [r<refinement>] [c<constellation>]";
+                    return "give指令缺少参数，用法: give <itemId|avatarId|params> [modifiers...]";
                 }
-                // 检查第二个参数是否是数字或@UID
-                if (!parts[1].matches("@?\\d+")) {
-                    return "give指令的物品/角色ID格式错误，应为数字";
-                }
-                // 验证修饰符格式（x, lv, r, c）
-                for (int i = 2; i < parts.length; i++) {
-                    String param = parts[i].toLowerCase();
-                    if (!param.startsWith("@") && !validateGiveModifier(param)) {
-                        return "give指令参数错误: '" + parts[i] + "'，支持的修饰符: x<amount>, lv<level>, r<refinement>, c<constellation>";
-                    }
-                }
+                // 放宽验证：允许任意字母数字组合，支持各种格式
+                // 不再严格检查参数格式，交给Grasscutter服务器处理
                 break;
 
             case "spawn":

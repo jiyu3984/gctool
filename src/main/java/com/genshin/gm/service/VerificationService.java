@@ -168,9 +168,9 @@ public class VerificationService {
     }
 
     /**
-     * 检查UID是否已验证且验证未过期
+     * 检查UID是否已验证（不检查过期时间，前端管理5分钟session）
      * @param uid 玩家UID
-     * @return 是否有效
+     * @return 是否已验证
      */
     public boolean isVerified(String uid) {
         VerificationCode code = verificationCodes.get(uid);
@@ -178,11 +178,8 @@ public class VerificationService {
             return false;
         }
 
-        if (code.isExpired()) {
-            verificationCodes.remove(uid);
-            return false;
-        }
-
+        // 只检查是否已验证，不检查过期时间
+        // 过期时间由前端的5分钟session管理
         return code.isVerified();
     }
 
@@ -217,13 +214,13 @@ public class VerificationService {
     }
 
     /**
-     * 获取已验证的token
+     * 获取已验证的token（不检查过期时间，前端管理5分钟session）
      * @param uid 玩家UID
-     * @return token，如果未验证或已过期返回null
+     * @return token，如果未验证返回null
      */
     public String getVerifiedToken(String uid) {
         VerificationCode code = verificationCodes.get(uid);
-        if (code == null || !code.isVerified() || code.isExpired()) {
+        if (code == null || !code.isVerified()) {
             return null;
         }
         return code.getToken();
