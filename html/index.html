@@ -939,6 +939,25 @@
         let tempSelectedItemId = null;
         let tempSelectedQuestId = null;
 
+        // 定期检查验证状态是否过期（每30秒检查一次）
+        function startVerificationExpiryCheck() {
+            setInterval(() => {
+                const saved = localStorage.getItem('verification');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    const expiryTime = new Date(data.expiryTime);
+                    const now = new Date();
+
+                    if (now >= expiryTime) {
+                        // 已过期，清除状态
+                        console.log('验证已过期，清除状态');
+                        localStorage.removeItem('verification');
+                        updateVerificationUI(false);
+                    }
+                }
+            }, 30000); // 每30秒检查一次
+        }
+
         // 页面加载时初始化
         window.onload = function() {
             loadItemData('item');
@@ -946,6 +965,7 @@
             loadGCConfig();
             autoConnectServer();
             loadPlayerUid(); // 加载保存的UID
+            startVerificationExpiryCheck(); // 启动验证状态过期检查
         };
 
         // 显示主功能区
@@ -2017,10 +2037,26 @@
                 statusDiv.style.display = 'block';
                 statusDiv.style.background = '#e8f5e9';
                 statusDiv.style.color = '#2e7d32';
-                statusDiv.textContent = '✅ 已验证，可以使用远程指令';
-                codeInput.disabled = true;
-                sendBtn.disabled = true;
-                verifyBtn.disabled = true;
+
+                // 检查剩余时间
+                const saved = localStorage.getItem('verification');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    const expiryTime = new Date(data.expiryTime);
+                    const now = new Date();
+                    const remainingMinutes = Math.ceil((expiryTime - now) / 60000);
+
+                    if (remainingMinutes > 0) {
+                        statusDiv.textContent = `✅ 已验证（剩余 ${remainingMinutes} 分钟有效期）`;
+                    } else {
+                        statusDiv.textContent = '✅ 已验证';
+                    }
+                } else {
+                    statusDiv.textContent = '✅ 已验证，可以使用远程指令';
+                }
+
+                // 不禁用输入框，这样5分钟后可以重新验证
+                codeInput.value = '';
                 verifyBtn.textContent = '已验证';
             } else {
                 statusDiv.style.display = 'none';
