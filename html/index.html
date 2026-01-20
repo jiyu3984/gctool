@@ -1605,6 +1605,61 @@
                 return;
             }
 
+            // 检查前端验证状态（5分钟session）
+            const saved = localStorage.getItem('verification');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.uid === uid && data.verified) {
+                    const expiryTime = new Date(data.expiryTime);
+                    if (new Date() >= expiryTime) {
+                        // 验证已过期
+                        localStorage.removeItem('verification');
+                        updateVerificationUI(false);
+
+                        resultDiv.style.display = 'block';
+                        resultDiv.style.background = '#fff3cd';
+                        resultDiv.style.color = '#f57c00';
+                        resultDiv.innerHTML = `
+                            <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 验证已过期</div>
+                            <div style="font-size: 14px;">您的验证状态已过期（5分钟），请重新验证：</div>
+                            <div style="margin-top: 10px; font-size: 13px;">
+                                1. 确保游戏在线<br>
+                                2. 点击页面顶部"发送验证码"<br>
+                                3. 在游戏好友消息中查看4位验证码<br>
+                                4. 在1分钟内输入验证码并验证
+                            </div>
+                        `;
+                        return;
+                    }
+                    // 验证仍然有效，继续执行
+                } else if (data.uid !== uid) {
+                    // UID不匹配，清除旧验证
+                    localStorage.removeItem('verification');
+                    updateVerificationUI(false);
+
+                    resultDiv.style.display = 'block';
+                    resultDiv.style.background = '#fff3cd';
+                    resultDiv.style.color = '#f57c00';
+                    resultDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 需要验证</div>
+                        <div style="font-size: 14px;">请先验证您的UID</div>
+                        <div style="margin-top: 10px; font-size: 13px;">请在页面顶部完成UID验证后再执行指令</div>
+                    `;
+                    return;
+                }
+            } else {
+                // 没有验证记录
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = '#fff3cd';
+                resultDiv.style.color = '#f57c00';
+                resultDiv.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 需要验证</div>
+                    <div style="font-size: 14px;">请先验证您的UID</div>
+                    <div style="margin-top: 10px; font-size: 13px;">请在页面顶部完成UID验证后再执行指令</div>
+                `;
+                return;
+            }
+
             // 显示执行中状态
             resultDiv.style.display = 'block';
             resultDiv.style.background = '#e3f2fd';
