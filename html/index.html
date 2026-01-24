@@ -643,6 +643,17 @@
     <div class="container">
         <h1>⚔️ 原神 GM 指令生成器</h1>
 
+        <!-- 用户信息栏 -->
+        <div id="user-info-bar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; color: white;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 18px;">👤</span>
+                <span style="font-weight: 600;">欢迎，<span id="current-username">加载中...</span></span>
+            </div>
+            <button onclick="logout()" style="padding: 8px 20px; background: rgba(255,255,255,0.2); border: 1px solid white; border-radius: 6px; color: white; cursor: pointer; font-size: 14px; transition: all 0.2s;">
+                登出
+            </button>
+        </div>
+
         <!-- 主菜单 -->
         <div class="menu">
             <button class="menu-btn active" onclick="showSection('items')">物品生成</button>
@@ -651,21 +662,42 @@
             <button class="menu-btn" onclick="showSection('community')">玩家指令广场</button>
         </div>
 
-        <!-- 全局UID和验证码区域 -->
+        <!-- UID管理区域 -->
         <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 2px solid #e0e0e0;">
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label style="font-weight: 600; color: #333;">您的UID（用于点赞和远程执行指令）：</label>
-                <input type="number" id="player-uid" placeholder="请输入您的游戏UID" oninput="savePlayerUid()" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
+            <h3 style="margin-bottom: 15px; color: #333; font-size: 18px;">🎮 UID管理</h3>
+
+            <!-- 已验证的UID列表 -->
+            <div id="verified-uids-list" style="margin-bottom: 20px;">
+                <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">已验证的UID：</label>
+                <div id="uids-container" style="display: flex; flex-wrap: wrap; gap: 10px; min-height: 40px;">
+                    <div style="color: #999; font-size: 14px;">加载中...</div>
+                </div>
             </div>
 
-            <div class="form-group" id="verification-area" style="margin-bottom: 0;">
-                <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（请在1分钟内验证）：</label>
-                <input type="text" id="verification-code" placeholder="请输入4位验证码" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 22px; letter-spacing: 8px; text-align: center; font-weight: 600; margin-bottom: 10px;">
-                <div style="display: flex; gap: 10px;">
-                    <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="flex: 1; padding: 14px; margin: 0; font-size: 16px;">发送验证码</button>
-                    <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="flex: 1; padding: 14px; margin: 0; background: #4caf50; font-size: 16px;">验证</button>
+            <!-- 当前使用的UID -->
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-weight: 600; color: #333;">当前使用的UID（用于执行指令）：</label>
+                <select id="player-uid" onchange="savePlayerUid()" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
+                    <option value="">请选择一个UID</option>
+                </select>
+            </div>
+
+            <!-- 添加新UID区域 -->
+            <div style="background: white; padding: 15px; border-radius: 8px; border: 2px dashed #ddd;">
+                <h4 style="margin-bottom: 10px; color: #666; font-size: 16px;">➕ 添加新UID</h4>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <input type="number" id="new-uid-input" placeholder="请输入要添加的UID" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
                 </div>
-                <div id="verification-status" style="margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 14px;"></div>
+
+                <div class="form-group" id="verification-area" style="margin-bottom: 0;">
+                    <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（请在1分钟内验证）：</label>
+                    <input type="text" id="verification-code" placeholder="请输入4位验证码" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 22px; letter-spacing: 8px; text-align: center; font-weight: 600; margin-bottom: 10px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="flex: 1; padding: 14px; margin: 0; font-size: 16px;">发送验证码</button>
+                        <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="flex: 1; padding: 14px; margin: 0; background: #4caf50; font-size: 16px;">验证</button>
+                    </div>
+                    <div id="verification-status" style="margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 14px;"></div>
+                </div>
             </div>
         </div>
 
@@ -960,13 +992,218 @@
 
         // 页面加载时初始化
         window.onload = function() {
-            loadItemData('item');
-            loadQuestData();
-            loadGCConfig();
-            autoConnectServer();
-            loadPlayerUid(); // 加载保存的UID
-            startVerificationExpiryCheck(); // 启动验证状态过期检查
+            // 首先检查用户是否已登录
+            checkAuthentication().then(authenticated => {
+                if (!authenticated) {
+                    // 未登录，跳转到登录页
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // 已登录，继续初始化
+                loadUserInfo();
+                loadItemData('item');
+                loadQuestData();
+                loadGCConfig();
+                autoConnectServer();
+                loadPlayerUid(); // 加载保存的UID
+                loadVerifiedUids(); // 加载用户的已验证UID列表
+                startVerificationExpiryCheck(); // 启动验证状态过期检查
+            });
         };
+
+        // ==================== 用户认证相关函数 ====================
+
+        /**
+         * 检查用户是否已登录
+         */
+        async function checkAuthentication() {
+            const sessionToken = localStorage.getItem('sessionToken');
+
+            if (!sessionToken) {
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/user-info?sessionToken=${encodeURIComponent(sessionToken)}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    // Session有效，更新localStorage中的用户数据
+                    localStorage.setItem('username', result.username);
+                    localStorage.setItem('verifiedUids', JSON.stringify(result.verifiedUids || []));
+                    return true;
+                } else {
+                    // Session无效，清除本地数据
+                    localStorage.removeItem('sessionToken');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('verifiedUids');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                return false;
+            }
+        }
+
+        /**
+         * 加载并显示用户信息
+         */
+        function loadUserInfo() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('current-username').textContent = username;
+            }
+        }
+
+        /**
+         * 登出
+         */
+        async function logout() {
+            const sessionToken = localStorage.getItem('sessionToken');
+
+            if (sessionToken) {
+                try {
+                    await fetch(`${API_BASE}/auth/logout`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ sessionToken })
+                    });
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            }
+
+            // 清除本地数据
+            localStorage.removeItem('sessionToken');
+            localStorage.removeItem('username');
+            localStorage.removeItem('verifiedUids');
+            localStorage.removeItem('verification');
+            localStorage.removeItem('playerUid');
+
+            // 跳转到登录页
+            window.location.href = '/login.html';
+        }
+
+        /**
+         * 加载用户的已验证UID列表
+         */
+        async function loadVerifiedUids() {
+            const sessionToken = localStorage.getItem('sessionToken');
+            if (!sessionToken) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/user-info?sessionToken=${encodeURIComponent(sessionToken)}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const verifiedUids = result.verifiedUids || [];
+                    localStorage.setItem('verifiedUids', JSON.stringify(verifiedUids));
+                    displayVerifiedUids(verifiedUids);
+                    updateUidSelect(verifiedUids);
+                }
+            } catch (error) {
+                console.error('Failed to load verified UIDs:', error);
+            }
+        }
+
+        /**
+         * 显示已验证的UID列表
+         */
+        function displayVerifiedUids(uids) {
+            const container = document.getElementById('uids-container');
+
+            if (!uids || uids.length === 0) {
+                container.innerHTML = '<div style="color: #999; font-size: 14px;">暂无已验证的UID</div>';
+                return;
+            }
+
+            container.innerHTML = uids.map(uid => `
+                <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #667eea;">
+                    <span style="font-weight: 600; color: #667eea; font-size: 16px;">${uid}</span>
+                    <button onclick="removeUid('${uid}')" style="background: #ff4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px;">删除</button>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * 更新UID选择下拉框
+         */
+        function updateUidSelect(uids) {
+            const select = document.getElementById('player-uid');
+            const savedUid = localStorage.getItem('playerUid');
+
+            select.innerHTML = '<option value="">请选择一个UID</option>';
+
+            uids.forEach(uid => {
+                const option = document.createElement('option');
+                option.value = uid;
+                option.textContent = uid;
+                if (uid === savedUid) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+        /**
+         * 移除已验证的UID
+         */
+        async function removeUid(uid) {
+            if (!confirm(`确定要移除UID ${uid} 吗？`)) {
+                return;
+            }
+
+            const sessionToken = localStorage.getItem('sessionToken');
+            if (!sessionToken) {
+                alert('未登录');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/remove-uid`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionToken,
+                        uid
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('UID已移除');
+                    loadVerifiedUids(); // 重新加载列表
+
+                    // 如果移除的是当前使用的UID，清除选择
+                    const currentUid = document.getElementById('player-uid').value;
+                    if (currentUid === uid) {
+                        document.getElementById('player-uid').value = '';
+                        localStorage.removeItem('playerUid');
+                    }
+                } else {
+                    alert(result.message || '移除失败');
+                }
+            } catch (error) {
+                console.error('Remove UID error:', error);
+                alert('移除失败: ' + error.message);
+            }
+        }
+
+        /**
+         * 检查UID是否已验证（检查用户账户）
+         */
+        function isUidAlreadyVerified(uid) {
+            const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
+            return verifiedUids.includes(uid);
+        }
 
         // 显示主功能区
         function showSection(section) {
@@ -1605,6 +1842,61 @@
                 return;
             }
 
+            // 检查前端验证状态（5分钟session）
+            const saved = localStorage.getItem('verification');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.uid === uid && data.verified) {
+                    const expiryTime = new Date(data.expiryTime);
+                    if (new Date() >= expiryTime) {
+                        // 验证已过期
+                        localStorage.removeItem('verification');
+                        updateVerificationUI(false);
+
+                        resultDiv.style.display = 'block';
+                        resultDiv.style.background = '#fff3cd';
+                        resultDiv.style.color = '#f57c00';
+                        resultDiv.innerHTML = `
+                            <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 验证已过期</div>
+                            <div style="font-size: 14px;">您的验证状态已过期（5分钟），请重新验证：</div>
+                            <div style="margin-top: 10px; font-size: 13px;">
+                                1. 确保游戏在线<br>
+                                2. 点击页面顶部"发送验证码"<br>
+                                3. 在游戏好友消息中查看4位验证码<br>
+                                4. 在1分钟内输入验证码并验证
+                            </div>
+                        `;
+                        return;
+                    }
+                    // 验证仍然有效，继续执行
+                } else if (data.uid !== uid) {
+                    // UID不匹配，清除旧验证
+                    localStorage.removeItem('verification');
+                    updateVerificationUI(false);
+
+                    resultDiv.style.display = 'block';
+                    resultDiv.style.background = '#fff3cd';
+                    resultDiv.style.color = '#f57c00';
+                    resultDiv.innerHTML = `
+                        <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 需要验证</div>
+                        <div style="font-size: 14px;">请先验证您的UID</div>
+                        <div style="margin-top: 10px; font-size: 13px;">请在页面顶部完成UID验证后再执行指令</div>
+                    `;
+                    return;
+                }
+            } else {
+                // 没有验证记录
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = '#fff3cd';
+                resultDiv.style.color = '#f57c00';
+                resultDiv.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 需要验证</div>
+                    <div style="font-size: 14px;">请先验证您的UID</div>
+                    <div style="margin-top: 10px; font-size: 13px;">请在页面顶部完成UID验证后再执行指令</div>
+                `;
+                return;
+            }
+
             // 显示执行中状态
             resultDiv.style.display = 'block';
             resultDiv.style.background = '#e3f2fd';
@@ -1612,10 +1904,11 @@
             resultDiv.innerHTML = '⏳ 验证并执行中...';
 
             try {
+                const sessionToken = localStorage.getItem('sessionToken');
                 const response = await fetch('/api/commands/custom/execute', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({command, uid})
+                    body: JSON.stringify({command, uid, sessionToken})
                 });
 
                 const result = await response.json();
@@ -1859,8 +2152,19 @@
 
         // 发送验证码
         async function sendVerificationCode() {
-            const uid = getPlayerUid();
-            if (!uid) return;
+            // 使用新UID输入框
+            const uid = document.getElementById('new-uid-input').value.trim();
+
+            if (!uid) {
+                alert('请先输入要添加的UID！');
+                return;
+            }
+
+            // 检查UID是否已经验证过
+            if (isUidAlreadyVerified(uid)) {
+                alert('该UID已经验证过了，无需重复验证！');
+                return;
+            }
 
             const sendBtn = document.getElementById('send-code-btn');
             const statusDiv = document.getElementById('verification-status');
@@ -1916,8 +2220,13 @@
 
         // 验证验证码
         async function verifyCode() {
-            const uid = getPlayerUid();
-            if (!uid) return;
+            // 使用新UID输入框
+            const uid = document.getElementById('new-uid-input').value.trim();
+
+            if (!uid) {
+                alert('请先输入要添加的UID！');
+                return;
+            }
 
             const code = document.getElementById('verification-code').value.trim();
             if (!code) {
@@ -1932,46 +2241,74 @@
 
             const verifyBtn = document.getElementById('verify-code-btn');
             const statusDiv = document.getElementById('verification-status');
+            const sessionToken = localStorage.getItem('sessionToken');
 
             verifyBtn.disabled = true;
             verifyBtn.textContent = '验证中...';
 
             try {
-                const response = await fetch('/api/verification/verify', {
+                // Step 1: 验证验证码
+                const verifyResponse = await fetch('/api/verification/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ uid, code })
                 });
 
-                const result = await response.json();
+                const verifyResult = await verifyResponse.json();
 
-                if (result.success) {
-                    statusDiv.style.display = 'block';
-                    statusDiv.style.background = '#e8f5e9';
-                    statusDiv.style.color = '#2e7d32';
-                    statusDiv.textContent = '✅ 验证成功！已验证状态将保持5分钟';
+                if (verifyResult.success) {
+                    // Step 2: 验证成功后，保存UID到用户账户
+                    const addUidResponse = await fetch('/api/auth/add-uid', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sessionToken, uid })
+                    });
 
-                    // 保存验证状态到localStorage（前端5分钟有效期）
-                    const now = new Date();
-                    const expiryTime = new Date(now.getTime() + 5 * 60 * 1000); // 5分钟后过期
-                    const verificationData = {
-                        uid: uid,
-                        verified: true,
-                        verifiedAt: now.toISOString(),
-                        expiryTime: expiryTime.toISOString()
-                    };
-                    localStorage.setItem('verification', JSON.stringify(verificationData));
+                    const addUidResult = await addUidResponse.json();
 
-                    // 更新UI状态
-                    updateVerificationUI(true);
+                    if (addUidResult.success) {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#e8f5e9';
+                        statusDiv.style.color = '#2e7d32';
+                        statusDiv.textContent = '✅ 验证成功！UID已绑定到您的账户';
 
-                    // 清空验证码输入
-                    document.getElementById('verification-code').value = '';
+                        // 保存验证状态到localStorage（前端5分钟有效期）
+                        const now = new Date();
+                        const expiryTime = new Date(now.getTime() + 5 * 60 * 1000); // 5分钟后过期
+                        const verificationData = {
+                            uid: uid,
+                            verified: true,
+                            verifiedAt: now.toISOString(),
+                            expiryTime: expiryTime.toISOString()
+                        };
+                        localStorage.setItem('verification', JSON.stringify(verificationData));
+
+                        // 重新加载已验证UID列表
+                        await loadVerifiedUids();
+
+                        // 清空输入框
+                        document.getElementById('verification-code').value = '';
+                        document.getElementById('new-uid-input').value = '';
+
+                        // 更新UI状态
+                        updateVerificationUI(true);
+
+                        // 自动选择新添加的UID
+                        document.getElementById('player-uid').value = uid;
+                        savePlayerUid();
+                    } else {
+                        statusDiv.style.display = 'block';
+                        statusDiv.style.background = '#ffebee';
+                        statusDiv.style.color = '#c62828';
+                        statusDiv.textContent = '❌ 绑定失败: ' + addUidResult.message;
+                        verifyBtn.disabled = false;
+                        verifyBtn.textContent = '验证';
+                    }
                 } else {
                     statusDiv.style.display = 'block';
                     statusDiv.style.background = '#ffebee';
                     statusDiv.style.color = '#c62828';
-                    statusDiv.textContent = '❌ ' + result.message;
+                    statusDiv.textContent = '❌ ' + verifyResult.message;
                     verifyBtn.disabled = false;
                     verifyBtn.textContent = '验证';
                 }
@@ -2113,10 +2450,11 @@
             }
 
             try {
+                const sessionToken = localStorage.getItem('sessionToken');
                 const response = await fetch(`/api/commands/${id}/execute`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ uid })
+                    body: JSON.stringify({ uid, sessionToken })
                 });
 
                 const result = await response.json();

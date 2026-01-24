@@ -6,6 +6,7 @@ import com.genshin.gm.model.OpenCommandResponse;
 import com.genshin.gm.model.PlayerCommand;
 import com.genshin.gm.service.GrasscutterService;
 import com.genshin.gm.service.PlayerCommandService;
+import com.genshin.gm.service.UserService;
 import com.genshin.gm.service.VerificationService;
 import com.genshin.gm.util.CommandProcessor;
 import org.slf4j.Logger;
@@ -36,6 +37,33 @@ public class PlayerCommandController {
 
     @Autowired
     private VerificationService verificationService;
+
+    @Autowired
+    private UserService userService;
+
+    /**
+     * 检查UID是否已验证（检查用户账户或临时验证）
+     * @param sessionToken 用户session token（可选）
+     * @param uid 要检查的UID
+     * @return 是否已验证
+     */
+    private boolean isUidVerified(String sessionToken, String uid) {
+        // 1. 检查是否在用户账户的已验证UID列表中（永久验证）
+        if (sessionToken != null && !sessionToken.trim().isEmpty()) {
+            String username = userService.validateSession(sessionToken);
+            if (username != null && userService.isUidVerified(username, uid)) {
+                logger.debug("UID {} 已在用户 {} 的账户中验证", uid, username);
+                return true;
+            }
+        }
+
+        // 2. 检查临时验证状态（5分钟有效期）
+        boolean tempVerified = verificationService.isVerified(uid);
+        if (tempVerified) {
+            logger.debug("UID {} 通过临时验证", uid);
+        }
+        return tempVerified;
+    }
 
     /**
      * 提交新指令
@@ -153,14 +181,16 @@ public class PlayerCommandController {
         Map<String, Object> response = new HashMap<>();
         try {
             String uid = body.get("uid");
+            String sessionToken = body.get("sessionToken");
+
             if (uid == null || uid.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "请提供UID");
                 return ResponseEntity.ok(response);
             }
 
-            // 检查验证状态并获取token
-            if (!verificationService.isVerified(uid)) {
+            // 检查验证状态（用户账户或临时验证）
+            if (!isUidVerified(sessionToken, uid)) {
                 response.put("success", false);
                 response.put("message", "请先验证您的UID");
                 response.put("needVerification", true);
@@ -364,6 +394,7 @@ public class PlayerCommandController {
         try {
             String uid = body.get("uid");
             String command = body.get("command");
+            String sessionToken = body.get("sessionToken");
 
             if (uid == null || uid.trim().isEmpty()) {
                 response.put("success", false);
@@ -397,8 +428,8 @@ public class PlayerCommandController {
                 return ResponseEntity.ok(response);
             }
 
-            // 3. 检查验证状态
-            if (!verificationService.isVerified(uid)) {
+            // 3. 检查验证状态（用户账户或临时验证）
+            if (!isUidVerified(sessionToken, uid)) {
                 response.put("success", false);
                 response.put("message", "请先验证您的UID");
                 response.put("needVerification", true);
