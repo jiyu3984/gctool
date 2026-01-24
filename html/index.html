@@ -2137,6 +2137,8 @@
             const uid = document.getElementById('player-uid').value.trim();
             if (uid) {
                 localStorage.setItem('playerUid', uid);
+                // 检查这个UID是否已验证，并更新UI
+                checkVerificationStatus();
             }
         }
 
@@ -2144,7 +2146,7 @@
         function getPlayerUid() {
             const uid = document.getElementById('player-uid').value.trim();
             if (!uid) {
-                alert('请先在上方输入您的游戏UID！');
+                // 不弹窗，只返回null，让调用者决定如何处理
                 return null;
             }
             return uid;
@@ -2328,7 +2330,15 @@
             const uid = getPlayerUid();
             if (!uid) return false;
 
-            // 先检查localStorage
+            // 1. 先检查用户账户中的已验证UID（永久验证）
+            const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
+            if (verifiedUids.includes(uid)) {
+                console.log('UID已在账户中永久验证');
+                updateVerificationUI(true);
+                return true;
+            }
+
+            // 2. 检查临时验证状态（5分钟localStorage）
             const saved = localStorage.getItem('verification');
             if (saved) {
                 const data = JSON.parse(saved);
@@ -2345,7 +2355,7 @@
                 }
             }
 
-            // 向服务器确认
+            // 3. 向服务器确认（后备检查）
             try {
                 const response = await fetch(`/api/verification/status?uid=${uid}`);
                 const result = await response.json();
@@ -2375,21 +2385,30 @@
                 statusDiv.style.background = '#e8f5e9';
                 statusDiv.style.color = '#2e7d32';
 
-                // 检查剩余时间
-                const saved = localStorage.getItem('verification');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    const expiryTime = new Date(data.expiryTime);
-                    const now = new Date();
-                    const remainingMinutes = Math.ceil((expiryTime - now) / 60000);
+                // 检查当前UID是否在账户的永久验证列表中
+                const currentUid = document.getElementById('player-uid').value.trim();
+                const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
 
-                    if (remainingMinutes > 0) {
-                        statusDiv.textContent = `✅ 已验证（剩余 ${remainingMinutes} 分钟有效期）`;
-                    } else {
-                        statusDiv.textContent = '✅ 已验证';
-                    }
+                if (verifiedUids.includes(currentUid)) {
+                    // 永久验证
+                    statusDiv.textContent = '✅ 此UID已永久验证（已绑定到您的账户）';
                 } else {
-                    statusDiv.textContent = '✅ 已验证，可以使用远程指令';
+                    // 临时验证，检查剩余时间
+                    const saved = localStorage.getItem('verification');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        const expiryTime = new Date(data.expiryTime);
+                        const now = new Date();
+                        const remainingMinutes = Math.ceil((expiryTime - now) / 60000);
+
+                        if (remainingMinutes > 0) {
+                            statusDiv.textContent = `✅ 临时验证（剩余 ${remainingMinutes} 分钟有效期）`;
+                        } else {
+                            statusDiv.textContent = '✅ 已验证';
+                        }
+                    } else {
+                        statusDiv.textContent = '✅ 已验证，可以使用远程指令';
+                    }
                 }
 
                 // 不禁用输入框，这样5分钟后可以重新验证
@@ -2438,10 +2457,27 @@
             const uid = getPlayerUid();
             if (!uid) return;
 
-            // 检查验证状态
+            // 检查验证状态（不弹窗，静默检查）
             const verified = await checkVerificationStatus();
             if (!verified) {
-                alert('⚠️ 请先验证您的UID！\n\n1. 确保已登录游戏（必须在线）\n2. 点击"发送验证码"按钮\n3. 在游戏中查看弹出的4位验证码\n4. 输入验证码并点击"验证"按钮');
+                // 显示友好的提示消息（在页面顶部滚动）
+                const uidManagementSection = document.querySelector('[style*="UID管理"]')?.parentElement;
+                if (uidManagementSection) {
+                    uidManagementSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+                // 使用confirm提示，但更简洁
+                const shouldProceed = confirm('⚠️ 当前UID未验证\n\n是否前往顶部添加并验证此UID？\n\nUID: ' + uid);
+                if (shouldProceed) {
+                    // 滚动到UID管理区域
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    // 将UID填入新UID输入框
+                    document.getElementById('new-uid-input').value = uid;
+                    // 聚焦到输入框
+                    setTimeout(() => {
+                        document.getElementById('new-uid-input').focus();
+                    }, 500);
+                }
                 return;
             }
 
