@@ -367,11 +367,13 @@
             const messageDiv = document.getElementById(`${type}-message`);
             messageDiv.textContent = message;
             messageDiv.className = 'message ' + (isError ? 'error' : 'success');
+            messageDiv.style.display = 'block';  // 确保消息可见
         }
 
         function hideMessage(type) {
             const messageDiv = document.getElementById(`${type}-message`);
             messageDiv.style.display = 'none';
+            messageDiv.className = 'message';  // 重置类名
         }
 
         function showLoading(type, show) {
