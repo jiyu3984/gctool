@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - Genshin GM Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #667eea;
+            background: white;
+            border-bottom-color: #667eea;
+        }
+
+        .tab:hover {
+            background: #e9e9e9;
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #999;
+        }
+
+        .form-group .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Genshin GM Tool</h1>
+            <p>原神GM指令生成器</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('login')">登录</div>
+            <div class="tab" onclick="switchTab('register')">注册</div>
+        </div>
+
+        <div class="form-container">
+            <!-- Login Form -->
+            <div id="login-section" class="form-section active">
+                <div id="login-message" class="message"></div>
+
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-username">用户名</label>
+                        <input
+                            type="text"
+                            id="login-username"
+                            placeholder="请输入用户名"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">密码</label>
+                        <input
+                            type="password"
+                            id="login-password"
+                            placeholder="请输入密码"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="login-btn">登录</button>
+                </form>
+
+                <div id="login-loading" class="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 10px; color: #666;">正在登录...</p>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-section" class="form-section">
+                <div id="register-message" class="message"></div>
+
+                <form id="register-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="register-username">用户名</label>
+                        <input
+                            type="text"
+                            id="register-username"
+                            placeholder="请输入用户名"
+                            required
+                            autocomplete="username"
+                        >
+                        <div class="hint">用户名将作为您的唯一标识</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-password">密码</label>
+                        <input
+                            type="password"
+                            id="register-password"
+                            placeholder="请输入密码"
+                            required
+                            autocomplete="new-password"
+                        >
+                        <div class="hint">密码至少6个字符</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-password-confirm">确认密码</label>
+                        <input
+                            type="password"
+                            id="register-password-confirm"
+                            placeholder="请再次输入密码"
+                            required
+                            autocomplete="new-password"
+                        >
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="register-btn">注册</button>
+                </form>
+
+                <div id="register-loading" class="loading">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 10px; color: #666;">正在注册...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Genshin GM Tool © 2024
+        </div>
+    </div>
+
+    <script>
+        // Check if already logged in
+        window.addEventListener('DOMContentLoaded', function() {
+            const sessionToken = localStorage.getItem('sessionToken');
+            if (sessionToken) {
+                // Validate session with backend
+                validateSession(sessionToken);
+            }
+        });
+
+        async function validateSession(sessionToken) {
+            try {
+                const response = await fetch(`/api/auth/user-info?sessionToken=${encodeURIComponent(sessionToken)}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    // Session valid, redirect to main page
+                    window.location.href = '/index.html';
+                } else {
+                    // Session invalid, clear it
+                    localStorage.removeItem('sessionToken');
+                    localStorage.removeItem('username');
+                    localStorage.removeItem('verifiedUids');
+                }
+            } catch (error) {
+                console.error('Session validation error:', error);
+                localStorage.removeItem('sessionToken');
+                localStorage.removeItem('username');
+                localStorage.removeItem('verifiedUids');
+            }
+        }
+
+        function switchTab(tab) {
+            // Update tab buttons
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update form sections
+            const sections = document.querySelectorAll('.form-section');
+            sections.forEach(s => s.classList.remove('active'));
+
+            if (tab === 'login') {
+                document.getElementById('login-section').classList.add('active');
+            } else {
+                document.getElementById('register-section').classList.add('active');
+            }
+
+            // Clear messages
+            hideMessage('login');
+            hideMessage('register');
+        }
+
+        function showMessage(type, message, isError = false) {
+            const messageDiv = document.getElementById(`${type}-message`);
+            messageDiv.textContent = message;
+            messageDiv.className = 'message ' + (isError ? 'error' : 'success');
+        }
+
+        function hideMessage(type) {
+            const messageDiv = document.getElementById(`${type}-message`);
+            messageDiv.style.display = 'none';
+        }
+
+        function showLoading(type, show) {
+            const loadingDiv = document.getElementById(`${type}-loading`);
+            const formDiv = document.getElementById(`${type}-form`);
+            const btn = document.getElementById(`${type}-btn`);
+
+            if (show) {
+                loadingDiv.classList.add('show');
+                formDiv.style.display = 'none';
+                btn.disabled = true;
+            } else {
+                loadingDiv.classList.remove('show');
+                formDiv.style.display = 'block';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                showMessage('login', '请填写所有字段', true);
+                return;
+            }
+
+            hideMessage('login');
+            showLoading('login', true);
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Save session data to localStorage
+                    localStorage.setItem('sessionToken', result.sessionToken);
+                    localStorage.setItem('username', result.username);
+                    localStorage.setItem('verifiedUids', JSON.stringify(result.verifiedUids || []));
+
+                    showMessage('login', '登录成功！正在跳转...', false);
+
+                    // Redirect to main page after 1 second
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 1000);
+                } else {
+                    showLoading('login', false);
+                    showMessage('login', result.message || '登录失败', true);
+                }
+            } catch (error) {
+                showLoading('login', false);
+                showMessage('login', '登录失败: ' + error.message, true);
+                console.error('Login error:', error);
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const passwordConfirm = document.getElementById('register-password-confirm').value;
+
+            // Validation
+            if (!username || !password || !passwordConfirm) {
+                showMessage('register', '请填写所有字段', true);
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('register', '密码至少需要6个字符', true);
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                showMessage('register', '两次输入的密码不一致', true);
+                return;
+            }
+
+            hideMessage('register');
+            showLoading('register', true);
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('register', '注册成功！请登录', false);
+
+                    // Clear form
+                    document.getElementById('register-form').reset();
+
+                    // Switch to login tab after 1.5 seconds
+                    setTimeout(() => {
+                        const loginTab = document.querySelector('.tab:first-child');
+                        loginTab.click();
+
+                        // Pre-fill username
+                        document.getElementById('login-username').value = username;
+                        document.getElementById('login-password').focus();
+                    }, 1500);
+
+                    showLoading('register', false);
+                } else {
+                    showLoading('register', false);
+                    showMessage('register', result.message || '注册失败', true);
+                }
+            } catch (error) {
+                showLoading('register', false);
+                showMessage('register', '注册失败: ' + error.message, true);
+                console.error('Register error:', error);
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('login-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin(e);
+            }
+        });
+
+        document.getElementById('register-password-confirm').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleRegister(e);
+            }
+        });
+    </script>
+</body>
+</html>
