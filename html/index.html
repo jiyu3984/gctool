@@ -1904,10 +1904,11 @@
             resultDiv.innerHTML = '⏳ 验证并执行中...';
 
             try {
+                const sessionToken = localStorage.getItem('sessionToken');
                 const response = await fetch('/api/commands/custom/execute', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({command, uid})
+                    body: JSON.stringify({command, uid, sessionToken})
                 });
 
                 const result = await response.json();
@@ -2449,10 +2450,11 @@
             }
 
             try {
+                const sessionToken = localStorage.getItem('sessionToken');
                 const response = await fetch(`/api/commands/${id}/execute`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ uid })
+                    body: JSON.stringify({ uid, sessionToken })
                 });
 
                 const result = await response.json();
