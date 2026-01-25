@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
@@ -151,25 +152,34 @@ public class GrasscutterService {
      * 发送请求到Grasscutter服务器
      */
     private OpenCommandResponse sendRequest(String serverUrl, OpenCommandRequest request) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<OpenCommandRequest> entity = new HttpEntity<>(request, headers);
+            HttpEntity<OpenCommandRequest> entity = new HttpEntity<>(request, headers);
 
-        logger.info("发送请求到 {}: action={}", serverUrl, request.getAction());
+            logger.info("发送请求到 {}: action={}, request={}", serverUrl, request.getAction(), request);
 
-        ResponseEntity<OpenCommandResponse> response = restTemplate.exchange(
-                serverUrl,
-                HttpMethod.POST,
-                entity,
-                OpenCommandResponse.class
-        );
+            ResponseEntity<OpenCommandResponse> response = restTemplate.exchange(
+                    serverUrl,
+                    HttpMethod.POST,
+                    entity,
+                    OpenCommandResponse.class
+            );
 
-        OpenCommandResponse result = response.getBody();
-        if (result != null) {
-            logger.info("收到响应: retcode={}, message={}", result.getRetcode(), result.getMessage());
+            OpenCommandResponse result = response.getBody();
+            if (result != null) {
+                logger.info("收到响应: retcode={}, message={}, data={}",
+                    result.getRetcode(), result.getMessage(), result.getData());
+            } else {
+                logger.warn("响应体为空");
+            }
+
+            return result;
+        } catch (RestClientException e) {
+            logger.error("请求失败: serverUrl={}, action={}, error={}",
+                serverUrl, request.getAction(), e.getMessage(), e);
+            throw e;
         }
-
-        return result;
     }
 }

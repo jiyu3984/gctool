@@ -44,6 +44,8 @@ public class ConfigLoader {
             logger.info("成功加载配置文件: {}", CONFIG_FILE);
             logger.info("前端地址: {}:{}", appConfig.getFrontend().getHost(),
                        appConfig.getFrontend().getPort());
+            logger.info("Grasscutter API: {}", appConfig.getGrasscutter().getFullUrl());
+            logger.info("Grasscutter 超时: {}ms", appConfig.getGrasscutter().getTimeout());
             logger.info("MongoDB连接: {}:{}/{}",
                        appConfig.getMongodb().getHost(),
                        appConfig.getMongodb().getPort(),
