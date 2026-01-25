@@ -1,12 +1,13 @@
 package com.genshin.gm.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Web配置类 - 配置静态资源映射
+ * Web配置类 - 配置静态资源映射和CORS
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -22,5 +23,16 @@ public class WebConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
         // 将根路径重定向到 index.html
         registry.addViewController("/").setViewName("forward:/index.html");
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        // 配置CORS，允许所有来源访问API
+        registry.addMapping("/api/**")
+                .allowedOriginPatterns("*")  // 允许所有来源
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  // 允许的HTTP方法
+                .allowedHeaders("*")  // 允许所有请求头
+                .allowCredentials(true)  // 允许发送Cookie
+                .maxAge(3600);  // 预检请求缓存时间（秒）
     }
 }
