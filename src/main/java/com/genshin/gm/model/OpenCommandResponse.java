@@ -36,6 +36,9 @@ public class OpenCommandResponse {
     }
 
     public boolean isSuccess() {
-        return retcode == 200;
+        // 兼容不同版本的 Grasscutter OpenCommand 插件
+        // 官方文档: retcode=200 表示成功
+        // 某些版本: retcode=0 表示成功
+        return retcode == 0 || retcode == 200;
     }
 }
