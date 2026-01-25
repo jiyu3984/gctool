@@ -1,50 +1,74 @@
 package com.genshin.gm.config;
 
-import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoException;
+import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 /**
- * MongoDB配置类
+ * MongoDB配置类 - 允许应用在MongoDB不可用时也能启动
  */
 @Configuration
-@EnableMongoRepositories(basePackages = "com.genshin.gm.repository")
-public class MongoDBConfiguration extends AbstractMongoClientConfiguration {
+public class MongoDBConfiguration {
 
-    private final AppConfig.MongoDBConfig mongoConfig;
+    private static final Logger logger = LoggerFactory.getLogger(MongoDBConfiguration.class);
 
-    public MongoDBConfiguration() {
+    @Bean
+    @ConditionalOnMissingBean
+    public MongoClient mongoClient() {
         AppConfig config = ConfigLoader.getConfig();
-        if (config != null && config.getMongodb() != null) {
-            this.mongoConfig = config.getMongodb();
-        } else {
-            this.mongoConfig = new AppConfig.MongoDBConfig();
+        AppConfig.MongoDBConfig mongoConfig = config.getMongodb();
+
+        try {
+            logger.info("正在连接MongoDB: {}:{}", mongoConfig.getHost(), mongoConfig.getPort());
+
+            MongoClientSettings settings = MongoClientSettings.builder()
+                    .applyToClusterSettings(builder ->
+                            builder.hosts(Collections.singletonList(
+                                    new ServerAddress(mongoConfig.getHost(), mongoConfig.getPort())
+                            ))
+                                    .serverSelectionTimeout(5, TimeUnit.SECONDS))  // 5秒超时
+                    .build();
+
+            MongoClient client = MongoClients.create(settings);
+
+            // 测试连接
+            try {
+                client.getDatabase(mongoConfig.getDatabase()).listCollectionNames().first();
+                logger.info("✅ MongoDB连接成功: {}", mongoConfig.getDatabase());
+            } catch (MongoException e) {
+                logger.warn("⚠️ MongoDB连接失败，但应用将继续运行（用户认证功能将不可用）");
+                logger.warn("MongoDB错误: {}", e.getMessage());
+                logger.warn("请确保MongoDB已安装并运行在 {}:{}", mongoConfig.getHost(), mongoConfig.getPort());
+            }
+
+            return client;
+
+        } catch (Exception e) {
+            logger.error("❌ 创建MongoDB客户端失败", e);
+            logger.error("应用将继续运行，但用户认证功能将不可用");
+            logger.error("要启用用户认证，请安装并启动MongoDB");
+
+            // 返回一个空的MongoDB客户端（允许应用启动）
+            return MongoClients.create("mongodb://localhost:27017/?serverSelectionTimeoutMS=1000");
         }
     }
 
-    @Override
-    protected String getDatabaseName() {
-        return mongoConfig.getDatabase();
-    }
-
-    @Override
     @Bean
-    public MongoClient mongoClient() {
-        ConnectionString connectionString = new ConnectionString(mongoConfig.getConnectionString());
-        MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
-                .applyConnectionString(connectionString)
-                .build();
-        return MongoClients.create(mongoClientSettings);
-    }
-
-    @Bean
-    public MongoTemplate mongoTemplate() {
-        return new MongoTemplate(mongoClient(), getDatabaseName());
+    @ConditionalOnMissingBean
+    public MongoTemplate mongoTemplate(MongoClient mongoClient) {
+        AppConfig config = ConfigLoader.getConfig();
+        String database = config.getMongodb().getDatabase();
+        return new MongoTemplate(mongoClient, database);
     }
 }

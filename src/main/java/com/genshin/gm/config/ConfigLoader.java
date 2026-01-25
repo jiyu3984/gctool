@@ -34,9 +34,20 @@ public class ConfigLoader {
 
             ObjectMapper objectMapper = new ObjectMapper();
             appConfig = objectMapper.readValue(configFile, AppConfig.class);
+
+            // 如果配置文件中没有MongoDB配置，使用默认配置
+            if (appConfig.getMongodb() == null) {
+                logger.warn("配置文件中未找到MongoDB配置，使用默认配置");
+                appConfig.setMongodb(new AppConfig.MongoDBConfig());
+            }
+
             logger.info("成功加载配置文件: {}", CONFIG_FILE);
             logger.info("前端地址: {}:{}", appConfig.getFrontend().getHost(),
                        appConfig.getFrontend().getPort());
+            logger.info("MongoDB连接: {}:{}/{}",
+                       appConfig.getMongodb().getHost(),
+                       appConfig.getMongodb().getPort(),
+                       appConfig.getMongodb().getDatabase());
 
             return appConfig;
         } catch (IOException e) {

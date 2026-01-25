@@ -367,11 +367,13 @@
             const messageDiv = document.getElementById(`${type}-message`);
             messageDiv.textContent = message;
             messageDiv.className = 'message ' + (isError ? 'error' : 'success');
+            messageDiv.style.display = 'block';  // 确保消息可见
         }
 
         function hideMessage(type) {
             const messageDiv = document.getElementById(`${type}-message`);
             messageDiv.style.display = 'none';
+            messageDiv.className = 'message';  // 重置类名
         }
 
         function showLoading(type, show) {
@@ -481,25 +483,25 @@
 
                 const result = await response.json();
 
+                showLoading('register', false);
+
                 if (result.success) {
-                    showMessage('register', '注册成功！请登录', false);
+                    showMessage('register', '✅ 注册成功！正在跳转到登录页面...', false);
 
                     // Clear form
                     document.getElementById('register-form').reset();
 
-                    // Switch to login tab after 1.5 seconds
+                    // Switch to login tab after 2 seconds (给用户时间看到成功消息)
                     setTimeout(() => {
+                        hideMessage('register');
                         const loginTab = document.querySelector('.tab:first-child');
                         loginTab.click();
 
                         // Pre-fill username
                         document.getElementById('login-username').value = username;
                         document.getElementById('login-password').focus();
-                    }, 1500);
-
-                    showLoading('register', false);
+                    }, 2000);
                 } else {
-                    showLoading('register', false);
                     showMessage('register', result.message || '注册失败', true);
                 }
             } catch (error) {
