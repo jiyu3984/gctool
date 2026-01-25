@@ -1686,6 +1686,11 @@
 
         // ========== Grasscutter 服务器连接功能 ==========
 
+        // 检查响应是否成功（兼容 Grasscutter 的 retcode=0 和标准的 retcode=200）
+        function isSuccess(result) {
+            return result && (result.retcode === 0 || result.retcode === 200);
+        }
+
         // 加载Grasscutter配置
         async function loadGCConfig() {
             try {
@@ -1720,7 +1725,7 @@
 
                 const result = await response.json();
 
-                if (result.retcode === 200) {
+                if (isSuccess(result)) {
                     isServerConnected = true;
                     // 获取在线玩家数
                     getOnlinePlayerCount(gcConfig.fullUrl);
@@ -1744,7 +1749,7 @@
 
                 const result = await response.json();
 
-                if (result.retcode === 200 && result.data) {
+                if (isSuccess(result) && result.data) {
                     const count = result.data.count || 0;
                     updateServerStatus(true, count);
                 }
@@ -1803,7 +1808,7 @@
 
                 const result = await response.json();
 
-                if (result.retcode === 200) {
+                if (isSuccess(result)) {
                     alert('✅ 指令执行成功！\n\n' + (result.data || '无返回信息'));
                 } else {
                     alert('❌ 指令执行失败: ' + result.message);
