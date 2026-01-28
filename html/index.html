@@ -1694,7 +1694,7 @@
         // 加载Grasscutter配置
         async function loadGCConfig() {
             try {
-                const response = await fetch('/api/grasscutter/config');
+                const response = await fetch(`${API_BASE}/grasscutter/config`);
                 gcConfig = await response.json();
                 console.log('Grasscutter 配置:', gcConfig);
 
@@ -1719,7 +1719,7 @@
 
             try {
                 console.log('正在连接到 Grasscutter 服务器:', gcConfig.fullUrl);
-                const response = await fetch('/api/grasscutter/ping', {
+                const response = await fetch(`${API_BASE}/grasscutter/ping`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({serverUrl: gcConfig.fullUrl})
@@ -1747,7 +1747,7 @@
         async function getOnlinePlayerCount(serverUrl) {
             try {
                 console.log('正在获取在线玩家数量...');
-                const response = await fetch('/api/grasscutter/online', {
+                const response = await fetch(`${API_BASE}/grasscutter/online`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({serverUrl})
@@ -1808,7 +1808,7 @@
             btn.textContent = '执行中...';
 
             try {
-                const response = await fetch('/api/grasscutter/console', {
+                const response = await fetch(`${API_BASE}/grasscutter/console`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -1886,7 +1886,7 @@
 
             try {
                 const sessionToken = localStorage.getItem('sessionToken');
-                const response = await fetch('/api/commands/custom/execute', {
+                const response = await fetch(`${API_BASE}/commands/custom/execute`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({command, uid, sessionToken})
@@ -1972,16 +1972,16 @@
             listDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⏳</div><div>加载中...</div></div>';
 
             try {
-                let url = '/api/commands/approved?sort=time';
+                let url = `${API_BASE}/commands/approved?sort=time`;
 
                 // 根据类型设置不同的参数
                 if (type === 'scene') {
-                    url = '/api/commands/approved?category=scene&sort=time';
+                    url = `${API_BASE}/commands/approved?category=scene&sort=time`;
                 } else if (type === 'avatar') {
-                    url = '/api/commands/approved?category=avatar&sort=time';
+                    url = `${API_BASE}/commands/approved?category=avatar&sort=time`;
                 } else if (type === 'all') {
                     // 指令广场显示"其他"分类的指令
-                    url = '/api/commands/approved?category=other&sort=time';
+                    url = `${API_BASE}/commands/approved?category=other&sort=time`;
                 }
 
                 const response = await fetch(url);
@@ -2068,7 +2068,7 @@
             }
 
             try {
-                const response = await fetch('/api/commands/submit', {
+                const response = await fetch(`${API_BASE}/commands/submit`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -2157,7 +2157,7 @@
             sendBtn.textContent = '发送中...';
 
             try {
-                const response = await fetch('/api/verification/send', {
+                const response = await fetch(`${API_BASE}/verification/send`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ uid })
@@ -2231,7 +2231,7 @@
 
             try {
                 // Step 1: 验证验证码
-                const verifyResponse = await fetch('/api/verification/verify', {
+                const verifyResponse = await fetch(`${API_BASE}/verification/verify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ uid, code })
@@ -2241,7 +2241,7 @@
 
                 if (verifyResult.success) {
                     // Step 2: 验证成功后，保存UID到用户账户
-                    const addUidResponse = await fetch('/api/auth/add-uid', {
+                    const addUidResponse = await fetch(`${API_BASE}/auth/add-uid`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ sessionToken, uid })

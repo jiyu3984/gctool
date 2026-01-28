@@ -25,6 +25,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/commands")
+@CrossOrigin(origins = "*")
 public class PlayerCommandController {
 
     private static final Logger logger = LoggerFactory.getLogger(PlayerCommandController.class);
