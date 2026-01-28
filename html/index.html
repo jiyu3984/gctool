@@ -625,9 +625,353 @@
             font-size: 48px;
             margin-bottom: 20px;
         }
+
+        /* 设置按钮 */
+        .settings-btn {
+            position: fixed;
+            top: 20px;
+            right: 220px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .settings-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: #667eea;
+            transition: transform 0.5s;
+        }
+
+        .settings-btn:hover svg {
+            transform: rotate(90deg);
+        }
+
+        /* 设置面板 */
+        .settings-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 3000;
+            animation: fadeIn 0.2s;
+        }
+
+        .settings-panel.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-panel-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 450px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .settings-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .settings-header h2 {
+            margin: 0;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .settings-close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .settings-close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .settings-body {
+            padding: 25px;
+        }
+
+        .settings-section {
+            margin-bottom: 25px;
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .uid-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 50px;
+        }
+
+        .uid-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 2px solid #667eea;
+        }
+
+        .uid-item.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .uid-item .uid-value {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .uid-item .uid-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .uid-item .uid-select-btn {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .uid-item .uid-select-btn:hover {
+            background: #764ba2;
+        }
+
+        .uid-item.selected .uid-select-btn {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .uid-item .uid-delete-btn {
+            padding: 6px 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .uid-item .uid-delete-btn:hover {
+            background: #c82333;
+        }
+
+        .add-uid-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px dashed #ddd;
+        }
+
+        .add-uid-form input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .add-uid-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .verification-code-input {
+            font-size: 24px !important;
+            letter-spacing: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            flex: 1;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-success:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .current-uid-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .current-uid-display .label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .current-uid-display .value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .no-uid-hint {
+            color: #999;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* 移动端适配设置按钮 */
+        @media (max-width: 768px) {
+            .settings-btn {
+                top: 10px;
+                right: 10px;
+                width: 44px;
+                height: 44px;
+            }
+
+            .settings-btn svg {
+                width: 24px;
+                height: 24px;
+            }
+
+            .status-indicator {
+                top: 70px;
+                right: 10px;
+                left: auto;
+            }
+
+            .settings-panel-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .settings-header {
+                padding: 15px 20px;
+            }
+
+            .settings-body {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- 右上角设置按钮 -->
+    <button class="settings-btn" onclick="openSettingsPanel()" title="UID设置">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+    </button>
+
     <!-- 右上角状态指示器 -->
     <div class="status-indicator">
         <div class="status-item">
@@ -638,7 +982,57 @@
             <span class="status-label">在线:</span>
             <span id="online-count" class="status-value">0人</span>
         </div>
+        <div class="status-item" id="current-uid-indicator" style="margin-top: 5px; padding-top: 8px; border-top: 1px solid #eee;">
+            <span class="status-label">UID:</span>
+            <span id="current-uid-display" class="status-value" style="color: #667eea; font-weight: 600;">未选择</span>
+        </div>
     </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel" id="settings-panel" onclick="closeSettingsPanel(event)">
+        <div class="settings-panel-content" onclick="event.stopPropagation()">
+            <div class="settings-header">
+                <h2>⚙️ UID 设置</h2>
+                <button class="settings-close-btn" onclick="closeSettingsPanel()">✕</button>
+            </div>
+            <div class="settings-body">
+                <!-- 当前使用的UID -->
+                <div class="settings-section">
+                    <div class="current-uid-display">
+                        <div class="label">当前使用的UID</div>
+                        <div class="value" id="settings-current-uid">未选择</div>
+                    </div>
+                </div>
+
+                <!-- 已验证的UID列表 -->
+                <div class="settings-section">
+                    <div class="settings-section-title">📋 已绑定的UID</div>
+                    <div class="uid-list" id="uids-container">
+                        <div class="no-uid-hint">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- 添加新UID -->
+                <div class="settings-section">
+                    <div class="settings-section-title">➕ 添加新UID</div>
+                    <div class="add-uid-form">
+                        <input type="number" id="new-uid-input" placeholder="请输入游戏内UID">
+                        <input type="text" id="verification-code" class="verification-code-input" placeholder="验证码" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+                        <div class="btn-group">
+                            <button class="btn-primary" id="send-code-btn" onclick="sendVerificationCode()">发送验证码</button>
+                            <button class="btn-success" id="verify-code-btn" onclick="verifyCode()">验证绑定</button>
+                        </div>
+                        <div id="verification-status" style="margin-top: 12px; padding: 12px; border-radius: 8px; display: none; font-size: 14px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隐藏的UID选择器（保持兼容性） -->
+    <select id="player-uid" style="display: none;" onchange="savePlayerUid()">
+        <option value="">请选择一个UID</option>
+    </select>
 
     <div class="container">
         <h1>⚔️ 原神 GM 指令生成器</h1>
@@ -660,45 +1054,6 @@
             <button class="menu-btn" onclick="showSection('quest')">任务</button>
             <button class="menu-btn" onclick="showSection('custom')">自定义指令</button>
             <button class="menu-btn" onclick="showSection('community')">玩家指令广场</button>
-        </div>
-
-        <!-- UID管理区域 -->
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 2px solid #e0e0e0;">
-            <h3 style="margin-bottom: 15px; color: #333; font-size: 18px;">🎮 UID管理</h3>
-
-            <!-- 已验证的UID列表 -->
-            <div id="verified-uids-list" style="margin-bottom: 20px;">
-                <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">已验证的UID：</label>
-                <div id="uids-container" style="display: flex; flex-wrap: wrap; gap: 10px; min-height: 40px;">
-                    <div style="color: #999; font-size: 14px;">加载中...</div>
-                </div>
-            </div>
-
-            <!-- 当前使用的UID -->
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label style="font-weight: 600; color: #333;">当前使用的UID（用于执行指令）：</label>
-                <select id="player-uid" onchange="savePlayerUid()" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
-                    <option value="">请选择一个UID</option>
-                </select>
-            </div>
-
-            <!-- 添加新UID区域 -->
-            <div style="background: white; padding: 15px; border-radius: 8px; border: 2px dashed #ddd;">
-                <h4 style="margin-bottom: 10px; color: #666; font-size: 16px;">➕ 添加新UID</h4>
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <input type="number" id="new-uid-input" placeholder="请输入要添加的UID" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
-                </div>
-
-                <div class="form-group" id="verification-area" style="margin-bottom: 0;">
-                    <label style="font-weight: 600; color: #333; margin-bottom: 10px; display: block;">验证码（请在1分钟内验证）：</label>
-                    <input type="text" id="verification-code" placeholder="请输入4位验证码" maxlength="4" inputmode="numeric" pattern="[0-9]*" style="width: 100%; padding: 14px; border: 2px solid #ddd; border-radius: 8px; font-size: 22px; letter-spacing: 8px; text-align: center; font-weight: 600; margin-bottom: 10px;">
-                    <div style="display: flex; gap: 10px;">
-                        <button class="execute-btn" id="send-code-btn" onclick="sendVerificationCode()" style="flex: 1; padding: 14px; margin: 0; font-size: 16px;">发送验证码</button>
-                        <button class="execute-btn" id="verify-code-btn" onclick="verifyCode()" style="flex: 1; padding: 14px; margin: 0; background: #4caf50; font-size: 16px;">验证</button>
-                    </div>
-                    <div id="verification-status" style="margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 14px;"></div>
-                </div>
-            </div>
         </div>
 
         <!-- 物品生成区域 -->
@@ -1008,7 +1363,10 @@
                 autoConnectServer();
                 loadPlayerUid(); // 加载保存的UID
                 loadVerifiedUids(); // 加载用户的已验证UID列表
-                startVerificationExpiryCheck(); // 启动验证状态过期检查
+
+                // 初始化右上角UID显示
+                const savedUid = localStorage.getItem('playerUid');
+                updateCurrentUidDisplay(savedUid);
             });
         };
 
@@ -1114,20 +1472,58 @@
         /**
          * 显示已验证的UID列表
          */
+        // ========== 设置面板函数 ==========
+        function openSettingsPanel() {
+            document.getElementById('settings-panel').classList.add('active');
+        }
+
+        function closeSettingsPanel(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('settings-panel').classList.remove('active');
+        }
+
         function displayVerifiedUids(uids) {
             const container = document.getElementById('uids-container');
+            const currentUid = localStorage.getItem('playerUid');
 
             if (!uids || uids.length === 0) {
-                container.innerHTML = '<div style="color: #999; font-size: 14px;">暂无已验证的UID</div>';
+                container.innerHTML = '<div class="no-uid-hint">暂无已绑定的UID<br>请在下方添加新UID</div>';
                 return;
             }
 
             container.innerHTML = uids.map(uid => `
-                <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 10px 15px; border-radius: 8px; border: 2px solid #667eea;">
-                    <span style="font-weight: 600; color: #667eea; font-size: 16px;">${uid}</span>
-                    <button onclick="removeUid('${uid}')" style="background: #ff4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px;">删除</button>
+                <div class="uid-item ${uid === currentUid ? 'selected' : ''}">
+                    <span class="uid-value">${uid}</span>
+                    <div class="uid-actions">
+                        <button class="uid-select-btn" onclick="selectUid('${uid}')">${uid === currentUid ? '✓ 使用中' : '选择'}</button>
+                        <button class="uid-delete-btn" onclick="removeUid('${uid}')">删除</button>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        /**
+         * 选择UID
+         */
+        function selectUid(uid) {
+            localStorage.setItem('playerUid', uid);
+            document.getElementById('player-uid').value = uid;
+
+            // 更新显示
+            updateCurrentUidDisplay(uid);
+
+            // 重新渲染列表
+            const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
+            displayVerifiedUids(verifiedUids);
+        }
+
+        /**
+         * 更新当前UID显示
+         */
+        function updateCurrentUidDisplay(uid) {
+            const displayValue = uid || '未选择';
+            document.getElementById('settings-current-uid').textContent = displayValue;
+            document.getElementById('current-uid-display').textContent = displayValue;
         }
 
         /**
@@ -1148,6 +1544,9 @@
                 }
                 select.appendChild(option);
             });
+
+            // 更新右上角的UID显示
+            updateCurrentUidDisplay(savedUid);
         }
 
         /**
@@ -1854,7 +2253,14 @@
             }
 
             if (!uid) {
-                alert('请先选择一个UID！');
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = '#fff3cd';
+                resultDiv.style.color = '#f57c00';
+                resultDiv.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 请先选择UID</div>
+                    <div style="font-size: 14px;">点击右上角设置按钮选择或添加UID</div>
+                    <button onclick="openSettingsPanel()" style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">打开设置</button>
+                `;
                 return;
             }
 
@@ -1869,11 +2275,9 @@
                     <div style="font-weight: 600; margin-bottom: 8px;">⚠️ 需要验证UID</div>
                     <div style="font-size: 14px;">此UID未绑定到您的账户</div>
                     <div style="margin-top: 10px; font-size: 13px;">
-                        请在页面顶部"添加新UID"区域：<br>
-                        1. 输入UID并发送验证码<br>
-                        2. 在游戏好友消息中查看4位验证码<br>
-                        3. 验证后UID将永久绑定到您的账户
+                        点击下方按钮打开设置面板验证UID
                     </div>
+                    <button onclick="document.getElementById('new-uid-input').value='${uid}';openSettingsPanel();" style="margin-top: 10px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">去验证</button>
                 `;
                 return;
             }
@@ -2118,6 +2522,11 @@
             const uid = document.getElementById('player-uid').value.trim();
             if (uid) {
                 localStorage.setItem('playerUid', uid);
+                // 更新显示
+                updateCurrentUidDisplay(uid);
+                // 重新渲染UID列表
+                const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
+                displayVerifiedUids(verifiedUids);
                 // 检查这个UID是否已验证，并更新UI
                 checkVerificationStatus();
             }
@@ -2255,14 +2664,12 @@
                         statusDiv.style.color = '#2e7d32';
                         statusDiv.textContent = '✅ 验证成功！UID已绑定到您的账户';
 
-                        // 保存验证状态到localStorage（前端5分钟有效期）
+                        // 保存验证状态到localStorage
                         const now = new Date();
-                        const expiryTime = new Date(now.getTime() + 5 * 60 * 1000); // 5分钟后过期
                         const verificationData = {
                             uid: uid,
                             verified: true,
-                            verifiedAt: now.toISOString(),
-                            expiryTime: expiryTime.toISOString()
+                            verifiedAt: now.toISOString()
                         };
                         localStorage.setItem('verification', JSON.stringify(verificationData));
 
@@ -2273,12 +2680,17 @@
                         document.getElementById('verification-code').value = '';
                         document.getElementById('new-uid-input').value = '';
 
-                        // 更新UI状态
-                        updateVerificationUI(true);
-
                         // 自动选择新添加的UID
                         document.getElementById('player-uid').value = uid;
-                        savePlayerUid();
+                        localStorage.setItem('playerUid', uid);
+                        updateCurrentUidDisplay(uid);
+
+                        // 延迟关闭设置面板
+                        setTimeout(() => {
+                            closeSettingsPanel();
+                            verifyBtn.disabled = false;
+                            verifyBtn.textContent = '验证绑定';
+                        }, 1500);
                     } else {
                         statusDiv.style.display = 'block';
                         statusDiv.style.background = '#ffebee';
@@ -2436,28 +2848,23 @@
         // 使用指令（直接发送到玩家账户）
         async function usePlayerCommand(id, command) {
             const uid = getPlayerUid();
-            if (!uid) return;
+            if (!uid) {
+                // 没有选择UID，打开设置面板
+                const shouldOpen = confirm('⚠️ 请先选择一个UID\n\n点击"确定"打开设置面板选择或添加UID');
+                if (shouldOpen) {
+                    openSettingsPanel();
+                }
+                return;
+            }
 
             // 检查验证状态（不弹窗，静默检查）
-            const verified = await checkVerificationStatus();
-            if (!verified) {
-                // 显示友好的提示消息（在页面顶部滚动）
-                const uidManagementSection = document.querySelector('[style*="UID管理"]')?.parentElement;
-                if (uidManagementSection) {
-                    uidManagementSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-
-                // 使用confirm提示，但更简洁
-                const shouldProceed = confirm('⚠️ 当前UID未验证\n\n是否前往顶部添加并验证此UID？\n\nUID: ' + uid);
-                if (shouldProceed) {
-                    // 滚动到UID管理区域
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    // 将UID填入新UID输入框
+            const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
+            if (!verifiedUids.includes(uid)) {
+                // UID未验证，打开设置面板
+                const shouldOpen = confirm('⚠️ 当前UID未验证\n\nUID: ' + uid + '\n\n点击"确定"打开设置面板验证此UID');
+                if (shouldOpen) {
                     document.getElementById('new-uid-input').value = uid;
-                    // 聚焦到输入框
-                    setTimeout(() => {
-                        document.getElementById('new-uid-input').focus();
-                    }, 500);
+                    openSettingsPanel();
                 }
                 return;
             }
