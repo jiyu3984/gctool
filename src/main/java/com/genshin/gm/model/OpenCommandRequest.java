@@ -52,4 +52,14 @@ public class OpenCommandRequest {
     public void setData(Object data) {
         this.data = data;
     }
+
+    @Override
+    public String toString() {
+        return "OpenCommandRequest{" +
+                "token='" + (token != null && !token.isEmpty() ? "***" : "") + '\'' +
+                ", action='" + action + '\'' +
+                ", server='" + server + '\'' +
+                ", data=" + data +
+                '}';
+    }
 }

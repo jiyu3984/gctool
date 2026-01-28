@@ -1696,6 +1696,7 @@
             try {
                 const response = await fetch('/api/grasscutter/config');
                 gcConfig = await response.json();
+                console.log('Grasscutter 配置:', gcConfig);
 
                 // 如果有配置Token，自动填充
                 if (gcConfig.hasConsoleToken) {
@@ -1717,6 +1718,7 @@
             }
 
             try {
+                console.log('正在连接到 Grasscutter 服务器:', gcConfig.fullUrl);
                 const response = await fetch('/api/grasscutter/ping', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -1724,12 +1726,15 @@
                 });
 
                 const result = await response.json();
+                console.log('Ping 响应:', result);
 
                 if (isSuccess(result)) {
+                    console.log('✅ 服务器连接成功');
                     isServerConnected = true;
                     // 获取在线玩家数
                     getOnlinePlayerCount(gcConfig.fullUrl);
                 } else {
+                    console.warn('❌ 服务器连接失败:', result.message);
                     updateServerStatus(false, 0);
                 }
             } catch (error) {
@@ -1741,6 +1746,7 @@
         // 获取在线玩家数量
         async function getOnlinePlayerCount(serverUrl) {
             try {
+                console.log('正在获取在线玩家数量...');
                 const response = await fetch('/api/grasscutter/online', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -1748,10 +1754,15 @@
                 });
 
                 const result = await response.json();
+                console.log('在线玩家响应:', result);
 
                 if (isSuccess(result) && result.data) {
                     const count = result.data.count || 0;
+                    console.log('在线玩家数量:', count);
                     updateServerStatus(true, count);
+                } else {
+                    console.warn('获取在线玩家数量失败，使用默认值 0');
+                    updateServerStatus(true, 0);
                 }
             } catch (error) {
                 console.error('获取在线玩家失败:', error);

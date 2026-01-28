@@ -4,7 +4,9 @@
   },
   "grasscutter": {
     "serverUrl": "http://127.0.0.1:1145",
-    "consoleToken": "sh345Hfss34P4Ya99sb4e6MRUEGd5srm95i34hFBf2EMDPutOye"
+    "apiPath": "/opencommand/api",
+    "consoleToken": "sh345Hfss34P4Ya99sb4e6MRUEGd5srm95i34hFBf2EMDPutOye",
+    "timeout": 10000
   },
   "mongodb": {
     "host": "localhost",

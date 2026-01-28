@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
@@ -151,25 +152,46 @@ public class GrasscutterService {
      * 发送请求到Grasscutter服务器
      */
     private OpenCommandResponse sendRequest(String serverUrl, OpenCommandRequest request) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<OpenCommandRequest> entity = new HttpEntity<>(request, headers);
+            HttpEntity<OpenCommandRequest> entity = new HttpEntity<>(request, headers);
 
-        logger.info("发送请求到 {}: action={}", serverUrl, request.getAction());
+            logger.info("=== 发送 OpenCommand 请求 ===");
+            logger.info("目标URL: {}", serverUrl);
+            logger.info("Action: {}", request.getAction());
+            logger.info("Token: {}", request.getToken() != null && !request.getToken().isEmpty() ? "已设置" : "未设置");
+            logger.info("Data: {}", request.getData());
 
-        ResponseEntity<OpenCommandResponse> response = restTemplate.exchange(
-                serverUrl,
-                HttpMethod.POST,
-                entity,
-                OpenCommandResponse.class
-        );
+            ResponseEntity<OpenCommandResponse> response = restTemplate.exchange(
+                    serverUrl,
+                    HttpMethod.POST,
+                    entity,
+                    OpenCommandResponse.class
+            );
 
-        OpenCommandResponse result = response.getBody();
-        if (result != null) {
-            logger.info("收到响应: retcode={}, message={}", result.getRetcode(), result.getMessage());
+            OpenCommandResponse result = response.getBody();
+            if (result != null) {
+                logger.info("=== 收到 OpenCommand 响应 ===");
+                logger.info("HTTP状态码: {}", response.getStatusCode());
+                logger.info("Retcode: {}", result.getRetcode());
+                logger.info("Message: {}", result.getMessage());
+                logger.info("Data: {}", result.getData());
+                logger.info("isSuccess: {}", result.isSuccess());
+            } else {
+                logger.warn("响应体为空，HTTP状态码: {}", response.getStatusCode());
+            }
+
+            return result;
+        } catch (RestClientException e) {
+            logger.error("=== OpenCommand 请求失败 ===");
+            logger.error("目标URL: {}", serverUrl);
+            logger.error("Action: {}", request.getAction());
+            logger.error("异常类型: {}", e.getClass().getName());
+            logger.error("异常消息: {}", e.getMessage());
+            logger.error("详细堆栈:", e);
+            throw e;
         }
-
-        return result;
     }
 }
