@@ -17,7 +17,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/grasscutter")
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*")
 public class GrasscutterController {
     private static final Logger logger = LoggerFactory.getLogger(GrasscutterController.class);
 
