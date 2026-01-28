@@ -15,6 +15,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/verification")
+@CrossOrigin(originPatterns = "*")
 public class VerificationController {
     private static final Logger logger = LoggerFactory.getLogger(VerificationController.class);
 
