@@ -644,6 +644,12 @@
             justify-content: center;
             transition: all 0.3s;
             border: none;
+            outline: none;
+        }
+
+        .settings-btn:focus {
+            outline: none;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         }
 
         .settings-btn:hover {
@@ -997,6 +1003,17 @@
                 <button class="settings-close-btn" onclick="closeSettingsPanel()">✕</button>
             </div>
             <div class="settings-body">
+                <!-- 账户信息 -->
+                <div class="settings-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px 20px; margin: 15px; display: flex; justify-content: space-between; align-items: center; color: white;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">👤</span>
+                        <span style="font-weight: 600; font-size: 16px;">欢迎，<span id="settings-username">加载中...</span></span>
+                    </div>
+                    <button onclick="logout()" style="padding: 8px 20px; background: rgba(255,255,255,0.2); border: 1px solid white; border-radius: 6px; color: white; cursor: pointer; font-size: 14px; transition: all 0.2s;">
+                        登出
+                    </button>
+                </div>
+
                 <!-- 当前使用的UID -->
                 <div class="settings-section">
                     <div class="current-uid-display">
@@ -1037,17 +1054,6 @@
 
     <div class="container">
         <h1>⚔️ 原神 GM 指令生成器</h1>
-
-        <!-- 用户信息栏 -->
-        <div id="user-info-bar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; color: white;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 18px;">👤</span>
-                <span style="font-weight: 600;">欢迎，<span id="current-username">加载中...</span></span>
-            </div>
-            <button onclick="logout()" style="padding: 8px 20px; background: rgba(255,255,255,0.2); border: 1px solid white; border-radius: 6px; color: white; cursor: pointer; font-size: 14px; transition: all 0.2s;">
-                登出
-            </button>
-        </div>
 
         <!-- 主菜单 -->
         <div class="menu">
@@ -1411,7 +1417,11 @@
         function loadUserInfo() {
             const username = localStorage.getItem('username');
             if (username) {
-                document.getElementById('current-username').textContent = username;
+                // 更新设置面板中的用户名
+                const settingsUsername = document.getElementById('settings-username');
+                if (settingsUsername) {
+                    settingsUsername.textContent = username;
+                }
             }
         }
 
