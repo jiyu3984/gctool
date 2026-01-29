@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: url('../data/bg/kun-gmligt.jpg') no-repeat center center fixed;
+            background: url('/data/bg/kun-gmligt.jpg') no-repeat center center fixed;
             background-size: cover;
             min-height: 100vh;
             display: flex;
@@ -644,6 +644,12 @@
             justify-content: center;
             transition: all 0.3s;
             border: none;
+            outline: none;
+        }
+
+        .settings-btn:focus {
+            outline: none;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         }
 
         .settings-btn:hover {
@@ -997,6 +1003,17 @@
                 <button class="settings-close-btn" onclick="closeSettingsPanel()">✕</button>
             </div>
             <div class="settings-body">
+                <!-- 账户信息 -->
+                <div class="settings-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 15px 20px; margin: 15px; display: flex; justify-content: space-between; align-items: center; color: white;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">👤</span>
+                        <span style="font-weight: 600; font-size: 16px;">欢迎，<span id="settings-username">加载中...</span></span>
+                    </div>
+                    <button onclick="logout()" style="padding: 8px 20px; background: rgba(255,255,255,0.2); border: 1px solid white; border-radius: 6px; color: white; cursor: pointer; font-size: 14px; transition: all 0.2s;">
+                        登出
+                    </button>
+                </div>
+
                 <!-- 当前使用的UID -->
                 <div class="settings-section">
                     <div class="current-uid-display">
@@ -1037,17 +1054,6 @@
 
     <div class="container">
         <h1>⚔️ 原神 GM 指令生成器</h1>
-
-        <!-- 用户信息栏 -->
-        <div id="user-info-bar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; color: white;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 18px;">👤</span>
-                <span style="font-weight: 600;">欢迎，<span id="current-username">加载中...</span></span>
-            </div>
-            <button onclick="logout()" style="padding: 8px 20px; background: rgba(255,255,255,0.2); border: 1px solid white; border-radius: 6px; color: white; cursor: pointer; font-size: 14px; transition: all 0.2s;">
-                登出
-            </button>
-        </div>
 
         <!-- 主菜单 -->
         <div class="menu">
@@ -1411,7 +1417,11 @@
         function loadUserInfo() {
             const username = localStorage.getItem('username');
             if (username) {
-                document.getElementById('current-username').textContent = username;
+                // 更新设置面板中的用户名
+                const settingsUsername = document.getElementById('settings-username');
+                if (settingsUsername) {
+                    settingsUsername.textContent = username;
+                }
             }
         }
 
@@ -1492,15 +1502,20 @@
                 return;
             }
 
-            container.innerHTML = uids.map(uid => `
-                <div class="uid-item ${uid === currentUid ? 'selected' : ''}">
+            const currentUidStr = String(currentUid);
+            container.innerHTML = uids.map(uid => {
+                const uidStr = String(uid);
+                const isSelected = uidStr === currentUidStr;
+                return `
+                <div class="uid-item ${isSelected ? 'selected' : ''}">
                     <span class="uid-value">${uid}</span>
                     <div class="uid-actions">
-                        <button class="uid-select-btn" onclick="selectUid('${uid}')">${uid === currentUid ? '✓ 使用中' : '选择'}</button>
+                        <button class="uid-select-btn" onclick="selectUid('${uid}')">${isSelected ? '✓ 使用中' : '选择'}</button>
                         <button class="uid-delete-btn" onclick="removeUid('${uid}')">删除</button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         /**
@@ -1602,7 +1617,8 @@
          */
         function isUidAlreadyVerified(uid) {
             const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
-            return verifiedUids.includes(uid);
+            const uidStr = String(uid);
+            return verifiedUids.some(v => String(v) === uidStr);
         }
 
         // 显示主功能区
@@ -2267,7 +2283,10 @@
 
             // 检查UID是否已永久验证（在用户账户中）
             const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
-            if (!verifiedUids.includes(uid)) {
+            // 确保类型一致，都转为字符串比较
+            const uidStr = String(uid);
+            const isVerified = verifiedUids.some(v => String(v) === uidStr);
+            if (!isVerified) {
                 // UID未验证
                 resultDiv.style.display = 'block';
                 resultDiv.style.background = '#fff3cd';
@@ -2726,7 +2745,8 @@
 
             // 1. 先检查用户账户中的已验证UID（永久验证）
             const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
-            if (verifiedUids.includes(uid)) {
+            const uidStr = String(uid);
+            if (verifiedUids.some(v => String(v) === uidStr)) {
                 console.log('UID已在账户中永久验证');
                 updateVerificationUI(true);
                 return true;
@@ -2782,8 +2802,9 @@
                 // 检查当前UID是否在账户的永久验证列表中
                 const currentUid = document.getElementById('player-uid').value.trim();
                 const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
+                const currentUidStr = String(currentUid);
 
-                if (verifiedUids.includes(currentUid)) {
+                if (verifiedUids.some(v => String(v) === currentUidStr)) {
                     // 永久验证
                     statusDiv.textContent = '✅ 此UID已永久验证（已绑定到您的账户）';
                 } else {
@@ -2860,7 +2881,8 @@
 
             // 检查验证状态（不弹窗，静默检查）
             const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
-            if (!verifiedUids.includes(uid)) {
+            const uidStr = String(uid);
+            if (!verifiedUids.some(v => String(v) === uidStr)) {
                 // UID未验证，打开设置面板
                 const shouldOpen = confirm('⚠️ 当前UID未验证\n\nUID: ' + uid + '\n\n点击"确定"打开设置面板验证此UID');
                 if (shouldOpen) {

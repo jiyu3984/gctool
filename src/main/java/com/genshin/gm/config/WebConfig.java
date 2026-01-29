@@ -14,6 +14,10 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 将 /data/** 映射到 data 目录（用于背景图片等静态资源）
+        registry.addResourceHandler("/data/**")
+                .addResourceLocations("file:data/");
+
         // 将根路径映射到 html 目录
         registry.addResourceHandler("/**")
                 .addResourceLocations("file:html/");
