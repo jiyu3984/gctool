@@ -1502,15 +1502,20 @@
                 return;
             }
 
-            container.innerHTML = uids.map(uid => `
-                <div class="uid-item ${uid === currentUid ? 'selected' : ''}">
+            const currentUidStr = String(currentUid);
+            container.innerHTML = uids.map(uid => {
+                const uidStr = String(uid);
+                const isSelected = uidStr === currentUidStr;
+                return `
+                <div class="uid-item ${isSelected ? 'selected' : ''}">
                     <span class="uid-value">${uid}</span>
                     <div class="uid-actions">
-                        <button class="uid-select-btn" onclick="selectUid('${uid}')">${uid === currentUid ? '✓ 使用中' : '选择'}</button>
+                        <button class="uid-select-btn" onclick="selectUid('${uid}')">${isSelected ? '✓ 使用中' : '选择'}</button>
                         <button class="uid-delete-btn" onclick="removeUid('${uid}')">删除</button>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         /**
@@ -1612,7 +1617,8 @@
          */
         function isUidAlreadyVerified(uid) {
             const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
-            return verifiedUids.includes(uid);
+            const uidStr = String(uid);
+            return verifiedUids.some(v => String(v) === uidStr);
         }
 
         // 显示主功能区
@@ -2277,7 +2283,10 @@
 
             // 检查UID是否已永久验证（在用户账户中）
             const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
-            if (!verifiedUids.includes(uid)) {
+            // 确保类型一致，都转为字符串比较
+            const uidStr = String(uid);
+            const isVerified = verifiedUids.some(v => String(v) === uidStr);
+            if (!isVerified) {
                 // UID未验证
                 resultDiv.style.display = 'block';
                 resultDiv.style.background = '#fff3cd';
@@ -2736,7 +2745,8 @@
 
             // 1. 先检查用户账户中的已验证UID（永久验证）
             const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
-            if (verifiedUids.includes(uid)) {
+            const uidStr = String(uid);
+            if (verifiedUids.some(v => String(v) === uidStr)) {
                 console.log('UID已在账户中永久验证');
                 updateVerificationUI(true);
                 return true;
@@ -2792,8 +2802,9 @@
                 // 检查当前UID是否在账户的永久验证列表中
                 const currentUid = document.getElementById('player-uid').value.trim();
                 const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
+                const currentUidStr = String(currentUid);
 
-                if (verifiedUids.includes(currentUid)) {
+                if (verifiedUids.some(v => String(v) === currentUidStr)) {
                     // 永久验证
                     statusDiv.textContent = '✅ 此UID已永久验证（已绑定到您的账户）';
                 } else {
@@ -2870,7 +2881,8 @@
 
             // 检查验证状态（不弹窗，静默检查）
             const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
-            if (!verifiedUids.includes(uid)) {
+            const uidStr = String(uid);
+            if (!verifiedUids.some(v => String(v) === uidStr)) {
                 // UID未验证，打开设置面板
                 const shouldOpen = confirm('⚠️ 当前UID未验证\n\nUID: ' + uid + '\n\n点击"确定"打开设置面板验证此UID');
                 if (shouldOpen) {
