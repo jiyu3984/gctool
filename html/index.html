@@ -1334,8 +1334,21 @@
         let tempSelectedQuestId = null;
 
         // 定期检查验证状态是否过期（每30秒检查一次）
+        // 注意：对于已永久绑定的UID，不需要检查过期
         function startVerificationExpiryCheck() {
             setInterval(() => {
+                // 首先检查当前UID是否已永久绑定
+                const currentUid = localStorage.getItem('playerUid');
+                if (currentUid) {
+                    const verifiedUids = JSON.parse(localStorage.getItem('verifiedUids') || '[]');
+                    const uidStr = String(currentUid);
+                    if (verifiedUids.some(v => String(v) === uidStr)) {
+                        // UID已永久绑定，不需要检查临时验证过期
+                        return;
+                    }
+                }
+
+                // 只对未永久绑定的UID检查临时验证状态
                 const saved = localStorage.getItem('verification');
                 if (saved) {
                     const data = JSON.parse(saved);
@@ -1344,7 +1357,7 @@
 
                     if (now >= expiryTime) {
                         // 已过期，清除状态
-                        console.log('验证已过期，清除状态');
+                        console.log('临时验证已过期，清除状态');
                         localStorage.removeItem('verification');
                         updateVerificationUI(false);
                     }
