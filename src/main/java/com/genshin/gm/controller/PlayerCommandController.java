@@ -190,21 +190,26 @@ public class PlayerCommandController {
                 return ResponseEntity.ok(response);
             }
 
-            // 检查验证状态（用户账户或临时验证）
-            if (!isUidVerified(sessionToken, uid)) {
-                response.put("success", false);
-                response.put("message", "请先验证您的UID");
-                response.put("needVerification", true);
-                return ResponseEntity.ok(response);
+            // 检查验证状态
+            // 首先检查是否在用户账户的已验证UID列表中（永久验证）
+            boolean isPermanentVerified = false;
+            if (sessionToken != null && !sessionToken.trim().isEmpty()) {
+                String username = userService.validateSession(sessionToken);
+                if (username != null && userService.isUidVerified(username, uid)) {
+                    isPermanentVerified = true;
+                    logger.debug("UID {} 已永久绑定到用户 {} 的账户", uid, username);
+                }
             }
 
-            // 获取验证后的token
-            String token = verificationService.getVerifiedToken(uid);
-            if (token == null) {
-                response.put("success", false);
-                response.put("message", "验证已过期，请重新验证");
-                response.put("needVerification", true);
-                return ResponseEntity.ok(response);
+            // 如果未永久绑定，检查临时验证
+            if (!isPermanentVerified) {
+                String token = verificationService.getVerifiedToken(uid);
+                if (token == null) {
+                    response.put("success", false);
+                    response.put("message", "请先验证您的UID");
+                    response.put("needVerification", true);
+                    return ResponseEntity.ok(response);
+                }
             }
 
             // 获取指令详情
@@ -429,21 +434,26 @@ public class PlayerCommandController {
                 return ResponseEntity.ok(response);
             }
 
-            // 3. 检查验证状态（用户账户或临时验证）
-            if (!isUidVerified(sessionToken, uid)) {
-                response.put("success", false);
-                response.put("message", "请先验证您的UID");
-                response.put("needVerification", true);
-                return ResponseEntity.ok(response);
+            // 3. 检查验证状态
+            // 首先检查是否在用户账户的已验证UID列表中（永久验证）
+            boolean isPermanentVerified = false;
+            if (sessionToken != null && !sessionToken.trim().isEmpty()) {
+                String username = userService.validateSession(sessionToken);
+                if (username != null && userService.isUidVerified(username, uid)) {
+                    isPermanentVerified = true;
+                    logger.debug("UID {} 已永久绑定到用户 {} 的账户", uid, username);
+                }
             }
 
-            // 4. 获取验证token
-            String token = verificationService.getVerifiedToken(uid);
-            if (token == null) {
-                response.put("success", false);
-                response.put("message", "验证已过期，请重新验证");
-                response.put("needVerification", true);
-                return ResponseEntity.ok(response);
+            // 如果未永久绑定，检查临时验证
+            if (!isPermanentVerified) {
+                String token = verificationService.getVerifiedToken(uid);
+                if (token == null) {
+                    response.put("success", false);
+                    response.put("message", "请先验证您的UID");
+                    response.put("needVerification", true);
+                    return ResponseEntity.ok(response);
+                }
             }
 
             // 5. 处理指令（添加UID）
